@@ -1,0 +1,21 @@
+version: '2.1'
+
+services:
+
+  # Private orthanc dicom proxy service (only amd64 version, need osimis...)
+  dicom:
+    image: jodogne/orthanc:latest
+    ports:
+      - "4242:4242"
+      - "8042:8042"  # Putting this on 80 makes it publishable on Resin
+
+  # Private redis broker service (has amd64 and armv7l versions)
+  broker:
+    image: redis:lastest
+    ports:
+      - "6379:6379"
+
+  # Diana-Worker service
+  worker:
+    build: diana-worker
+    command:    ["python3", "/opt/diana/apps/diana-star/app.py", "worker"]

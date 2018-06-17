@@ -1,0 +1,6 @@
+attr
+celery
+dill
+pydicom
+requests
+redis
