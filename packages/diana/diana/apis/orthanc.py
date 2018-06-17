@@ -2,7 +2,7 @@
 
 import logging
 import attr
-from diana.utils import Pattern, DicomLevel, OrthancGateway
+from diana.utils import DicomLevel, Pattern, gateway
 from .dixel import Dixel
 
 
@@ -13,11 +13,11 @@ class Orthanc(Pattern):
     path = attr.ib( default=None )
     user = attr.ib( default="orthanc" )
     password = attr.ib( default="orthanc" )
-    gateway = attr.ib()
+    gateway = attr.ib( init=False )
 
     @gateway.default
     def connect(self):
-        return OrthancGateway(host=self.host, port=self.port, path=self.path,
+        return gateway.Orthanc(host=self.host, port=self.port, path=self.path,
                                user=self.user, password=self.password)
 
     def get(self, oid, level=DicomLevel.STUDIES, view="tags"):
@@ -27,6 +27,10 @@ class Orthanc(Pattern):
         if view == "tags":
             # We can assemble a dixel
             item = Dixel(meta=result, level=level)
+            return item
+        elif view == "file":
+            # We can assemble a dixel
+            item = Dixel(file=result, level=level)
             return item
         else:
             # Return the meta info or binary data

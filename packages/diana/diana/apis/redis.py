@@ -11,14 +11,13 @@ class Redis(Pattern):
     host = attr.ib( default="localhost" )
     port = attr.ib( default="6379" )
     path = attr.ib( default=None )
-    # user = attr.ib( default="redis" )
-    # password = attr.ib( default="redis" )
+    password = attr.ib( default="passw0rd!" )
     db = attr.ib( default=0 )
     gateway = attr.ib( init=False )
 
     @gateway.default
     def connect(self):
-        return RedisGateway(host=self.host, port=self.port, db=self.db)
+        return RedisGateway(host=self.host, port=self.port, db=self.db, password=self.password)
 
     def get(self, id, **kwargs):
         item = loads( self.gateway.get(id) )

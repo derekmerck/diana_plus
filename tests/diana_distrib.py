@@ -10,7 +10,7 @@ d = Dixel()
 d_id = d.id
 
 logging.info("Testing local apis")
-cache = local_apis.Redis()
+cache = local_apis.Redis(password="passw0rd!")
 cache.put(d)
 e = cache.get(d_id)
 
@@ -18,7 +18,7 @@ assert d == e
 
 logging.info("Testing distributed apis")
 cache.put(d)
-cache = star_apis.Redis()
+cache = star_apis.Redis(password="passw0rd!")
 f = cache.get(d_id).get()
 
 assert d == f

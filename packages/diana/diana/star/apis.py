@@ -1,9 +1,10 @@
 import logging
 import attr
-from ..apis import Orthanc, Redis
+from ..apis import Orthanc, Redis, DicomFile
 from .tasks import do
 
 
+# Decorator
 def star(func):
     def wrapper(self, *args, **kwargs):
         celery_args = {}
@@ -15,12 +16,14 @@ def star(func):
         kwargs['method'] = func.__name__
         # logging.warning("wrapper: {}".format(kwargs))
         return do.apply_async(args, kwargs, **celery_args)
+
+    wrapper.s = "signature"
     return wrapper
 
 
 @attr.s
 class DistribMixin(object):
-    celery_queue = attr.ib(default='default')
+    celery_queue = attr.ib( default='default' )
 
     @star
     def get(self, id, **kwargs):
@@ -35,7 +38,6 @@ class DistribMixin(object):
         pass
 
 
-
 @attr.s
 class Orthanc(DistribMixin, Orthanc):
     pass
@@ -44,3 +46,8 @@ class Orthanc(DistribMixin, Orthanc):
 @attr.s
 class Redis(DistribMixin, Redis):
     pass
+
+
+@attr.s
+class File(DistribMixin, DicomFile):
+    celery_queue = attr.ib( default="file" )

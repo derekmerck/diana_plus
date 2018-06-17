@@ -19,3 +19,7 @@ def do(*args, **kwargs):
     # del (kwargs['method'])
     # return func(*args, **kwargs)
 
+
+@app.task(name="message")
+def message(msg, *args, **kwargs):
+    print(msg)

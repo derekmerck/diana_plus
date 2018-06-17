@@ -12,8 +12,8 @@ app.conf.update(
     accept_content = ["pickle"],
     result_serializer = "pickle",
     task_default_queue = 'default',
-    task_routes={'*.classify': {'queue': 'learn'},    # Only GPU boxes
-                 '*.file':     {'queue': 'file'} },   # Access to shared fs
+    task_routes={'*.gpu':  {'queue': 'gpu'},    # Only GPU boxes
+                 '*.file': {'queue': 'file'} },   # Access to shared fs
     include=['diana.star.tasks'],
     broker_url=os.environ.get('DIANA_BROKER', "redis://localhost:6379/1"),
     result_backend=os.environ.get('DIANA_RESULT', "redis://localhost:6379/2"),

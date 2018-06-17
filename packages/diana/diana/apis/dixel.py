@@ -1,12 +1,13 @@
 
 import attr
-from diana.utils import Pattern, DicomLevel, orthanc_id
+from ..utils import Pattern, DicomLevel, orthanc_id
 
 @attr.s
 class Dixel(Pattern):
     level = attr.ib(default=DicomLevel.STUDIES)
     meta = attr.ib(factory=dict)
-    data = attr.ib(default=None)
+    pixels = attr.ib(default=None)
+    file = attr.ib(default=None)
 
     def oid(self, level=None):
         level = level or self.level
