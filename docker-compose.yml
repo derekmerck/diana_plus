@@ -1,21 +1,35 @@
-version: '2.1'
+version: '3'
 
 services:
 
   # Private orthanc dicom proxy service (only amd64 version, need osimis...)
   dicom:
-    image: jodogne/orthanc:latest
+#    build:
+#      context: orthanc
+    image: derekmerck/orthanc:latest
     ports:
       - "4242:4242"
       - "8042:8042"  # Putting this on 80 makes it publishable on Resin
+    volumes:
+      - "/Users/derek/dev/diana_plus/docker/orthanc/orthanc.json:/etc/orthanc/orthanc.json:ro"
 
   # Private redis broker service (has amd64 and armv7l versions)
   broker:
-    image: redis:lastest
+    image: redis:latest
+    command: redis-server --requirepass passw0rd!
     ports:
       - "6379:6379"
 
-  # Diana-Worker service
+  # Diana-Worker service (should be able to build both amd64 and arm7 versions
   worker:
-    build: diana-worker
-    command:    ["python3", "/opt/diana/apps/diana-star/app.py", "worker"]
+    build:
+      context: diana-worker
+#      args:
+#        TINI_BINARY: tini-armhf
+    image: derekmerck/diana-worker
+    command:    ["python3", "diana-star/app.py", "worker", "-n", "docker@%host"]
+    links:
+      - broker
+    environment:
+      DIANA_BROKER: redis://:passw0rd!@broker:6379/1
+      DIANA_RESULT: redis://:passw0rd!@broker:6379/2

@@ -8,22 +8,20 @@
 FROM python:3.6-stretch
 MAINTAINER Derek Merck <derek_merck@brown.edu>
 
-RUN apt update  \
-  && apt install -y git
-
 ARG TINI_VERSION=v0.18.0
 ARG TINI_BINARY=tini
-#ARG TINI_BINARY tini-armhf
-
 ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/${TINI_BINARY} /bin/tini
 RUN chmod +x /bin/tini
 ENTRYPOINT ["/bin/tini", "--"]
 
-RUN useradd -ms /bin/bash diana && echo "diana:passw0rd!" | chpasswd
-RUN git clone https://github.com/derekmerck/diana_plus /home/diana/source
-RUN chown -R diana /home/diana/source
-RUN pip install -e /home/diana/source/packages/diana
+RUN apt update  \
+    && apt install -y git \
+    && useradd -ms /bin/bash diana && echo "diana:passw0rd!" | chpasswd \
+    && git clone https://github.com/derekmerck/diana_plus /home/diana/source \
+    && chown -R diana /home/diana/source \
+    && pip install -e /home/diana/source/packages/diana
 
+ENV TZ=America/New_York
 USER diana
 WORKDIR /home/diana/source/apps
 CMD python3 diana-star/app.py worker
