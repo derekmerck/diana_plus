@@ -19,13 +19,11 @@ ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/${TINI_BIN
 RUN chmod +x /bin/tini
 ENTRYPOINT ["/bin/tini", "--"]
 
-RUN useradd -ms /bin/bash diana
-
-USER diana
-WORKDIR /home/diana
-
-RUN git clone https://github.com/derekmerck/diana /home/diana/source
+RUN useradd -ms /bin/bash diana && echo "diana:passw0rd!" | chpasswd
+RUN git clone https://github.com/derekmerck/diana_plus /home/diana/source
+RUN chown -R diana /home/diana/source
 RUN pip install -e /home/diana/source/packages/diana
 
+USER diana
 WORKDIR /home/diana/source/apps
 CMD python3 diana-star/app.py worker
