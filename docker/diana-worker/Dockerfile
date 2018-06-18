@@ -6,16 +6,18 @@
 #   e.g., command="python3 diana-star/app.py worker -B -Q my_queue"
 
 ARG RESIN_ARCH="intel-nuc"
-# ARG RESIN_ARCH="raspberrypi3"
-ARG TINI_VERS="v0.18.0"
-# ARG TINI_BIN=tini-armhf
-ARG TINI_BIN="tini"
-ARG DIANA_PW="passw0rd!"
+#ARG RESIN_ARCH="raspberrypi3"
 
 FROM resin/${RESIN_ARCH}-python
 MAINTAINER Derek Merck <derek_merck@brown.edu>
 
-RUN [ "cross-build-start" ]
+RUN [ 'if [ "${RESIN_ARCH}" != "intel-nuc" ]; then cross-build-start; fi' ]
+
+# Args for use inside the cross-compiler must be declared inside the cross compiler!
+ARG TINI_VERS="v0.18.0"
+#ARG TINI_BIN=tini-armhf
+ARG TINI_BIN="tini"
+ARG DIANA_PW="passw0rd!"
 
 ADD https://github.com/krallin/tini/releases/download/${TINI_VERS}/${TINI_BIN} /bin/tini
 RUN chmod +x /bin/tini
@@ -28,7 +30,7 @@ RUN apt update  \
     && chown -R diana /home/diana/source \
     && pip install -e /home/diana/source/packages/diana
 
-RUN [ "cross-build-end" ]
+RUN [ 'if [ "${RESIN_ARCH}" != "intel-nuc" ]; then cross-build-end; fi' ]
 
 ENV TZ=America/New_York
 USER diana

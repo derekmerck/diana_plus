@@ -25,6 +25,11 @@ before_install:
 
   - docker build -t "$DOCKER_USERNAME/diana-worker:$ARCH_TAG" --build-arg "RESIN_ARCH=$RESIN_ARCH" --build-arg "TINI_BIN=$TINI_BIN" docker/diana-worker
 
+  # Login to docker for push
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+  - docker push "$DOCKER_USERNAME/diana-worker:$ARCH_TAG"
+
+
 script: true
 
 after_script: true
