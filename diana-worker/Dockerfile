@@ -7,10 +7,10 @@
 
 ARG RESIN_ARCH="intel-nuc"
 # ARG RESIN_ARCH="raspberrypi3"
-ARG TINI_VERS=v0.18.0
-# ARG TINI_BINARY=tini-armhf
-ARG TINI_BIN=tini
-ARG DIANA_PW=passw0rd!
+ARG TINI_VERS="v0.18.0"
+# ARG TINI_BIN=tini-armhf
+ARG TINI_BIN="tini"
+ARG DIANA_PW="passw0rd!"
 
 FROM resin/${RESIN_ARCH}-python
 MAINTAINER Derek Merck <derek_merck@brown.edu>
