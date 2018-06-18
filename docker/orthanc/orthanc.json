@@ -5,7 +5,7 @@
 
   // The logical name of this instance of Orthanc. This one is
   // displayed in Orthanc Explorer and at the URI "/system".
-  "Name" : "MyOrthanc",
+  "Name" : "Diana",
 
   // Path to the directory that holds the heavyweight files (i.e. the
   // raw DICOM instances). Backslashes must be either escaped by
@@ -137,6 +137,7 @@
   // The list of the registered users. Because Orthanc uses HTTP
   // Basic Authentication, the passwords are stored as plain text.
   "RegisteredUsers" : {
+    "orthanc" : "passw0rd!"
     // "alice" : "alicePassword"
   },
 

@@ -1,0 +1,35 @@
+dist: trusty
+language: python
+group: edge
+
+python:
+  - "3.6"
+services:
+  - docker
+
+addons:
+  apt:
+    packages:
+      - docker-ce
+
+env:
+  global:
+    - DOCKER_NAMESPACE="derekmerck"
+  matrix:
+    - ARCH_TAG="amd64" RESIN_ARCH="intel-nuc" TINI_BINARY="tini",
+    - ARCH_TAG="armv7l" RESIN_ARCH="raspberrypi3" TINI_BINARY="tini-armhf",
+
+before_install:
+
+  - docker build -t ${DOCKER_NAMESPACE}/diana-worker:${ARCH_TAG} \
+           --build-arg RESIN_ARCH=${RESIN_ARCH} \
+           --build-arg TINI_BINARY=${TINI_BINARY} \
+           docker/diana-worker
+
+script: true
+
+after_script: true
+
+  # Manifest and push
+
+

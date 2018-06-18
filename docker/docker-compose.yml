@@ -2,6 +2,45 @@ version: '3'
 
 services:
 
+  # Private redis broker service (has amd64 and armv7l versions)
+  broker:
+    image: redis:latest
+    command: redis-server --requirepass passw0rd!
+    ports:
+      - "6379:6379"
+    environment:
+      TZ: America/New_York
+
+  index:
+    image: splunk/splunk
+    ports:
+      - "8000:8000"
+      - "8089:8089"
+    environment:
+      TZ: America/New_York
+      SPLUNK_START_ARGS: "--accept-license"
+      SPLUNK_USER:  "splunk"
+      SPLUNK_CMD:   "edit user admin -password passw0rd! -role admin -auth admin:changeme"
+      SPLUNK_CMD_1: "add index diana -auth admin:passw0rd!"
+      SPLUNK_CMD_2: "http-event-collector enable -enable-ssl 0 -uri https://localhost:8089 -auth admin:passw0rd!"
+      SPLUNK_CMD_3: "http-event-collector create diana_token 'diana index token' -index diana -uri https://localhost:8089 -auth admin:passw0rd!"
+
+  # Diana-Worker service (should be able to build both amd64 and arm7 versions
+  worker:
+    build:
+      context: diana-worker
+#      args:
+#        TINI_BINARY: tini-armhf
+    image: derekmerck/diana-worker:armv7
+    command:    ["python3", "diana-star/app.py", "worker", "-n", "docker@%host", "-l", "INFO"]
+    links:
+      - broker
+      - index
+    environment:
+      TZ: America/New_York
+      DIANA_BROKER: redis://:passw0rd!@broker:6379/1
+      DIANA_RESULT: redis://:passw0rd!@broker:6379/2
+
   # Private orthanc dicom proxy service (only amd64 version, need osimis...)
   dicom:
 #    build:
@@ -12,24 +51,5 @@ services:
       - "8042:8042"  # Putting this on 80 makes it publishable on Resin
     volumes:
       - "/Users/derek/dev/diana_plus/docker/orthanc/orthanc.json:/etc/orthanc/orthanc.json:ro"
-
-  # Private redis broker service (has amd64 and armv7l versions)
-  broker:
-    image: redis:latest
-    command: redis-server --requirepass passw0rd!
-    ports:
-      - "6379:6379"
-
-  # Diana-Worker service (should be able to build both amd64 and arm7 versions
-  worker:
-    build:
-      context: diana-worker
-#      args:
-#        TINI_BINARY: tini-armhf
-    image: derekmerck/diana-worker
-    command:    ["python3", "diana-star/app.py", "worker", "-n", "docker@%host"]
-    links:
-      - broker
     environment:
-      DIANA_BROKER: redis://:passw0rd!@broker:6379/1
-      DIANA_RESULT: redis://:passw0rd!@broker:6379/2
+      TZ: America/New_York

@@ -19,3 +19,5 @@ app.conf.update(
     result_backend=os.environ.get('DIANA_RESULT', "redis://localhost:6379/2"),
     timezone = 'America/New_York'
 )
+
+print(os.environ.get('DIANA_BROKER', "redis://localhost:6379/1"))
