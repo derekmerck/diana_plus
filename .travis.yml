@@ -14,8 +14,8 @@ addons:
 
 env:
   matrix:
-    - ARCH_TAG="amd64" RESIN_ARCH="intel-nuc" TINI_BINARY="tini"
-    - ARCH_TAG="armv7l" RESIN_ARCH="raspberrypi3" TINI_BINARY="tini-armhf"
+    - ARCH_TAG="amd64" RESIN_ARCH="intel-nuc" TINI_BIN="tini"
+    - ARCH_TAG="armv7l" RESIN_ARCH="raspberrypi3" TINI_BIN="tini-armhf"
 
 before_install:
 
@@ -23,7 +23,7 @@ before_install:
   - mkdir -p $HOME/.docker
   - echo '{"experimental":"enabled"}' > "$HOME/.docker/config.json"
 
-  - docker build -t "$DOCKER_USERNAME/diana-worker:$ARCH_TAG" --build-arg "RESIN_ARCH=$RESIN_ARCH" --build-arg "TINI_BINARY=$TINI_BINARY" docker/diana-worker
+  - docker build -t "$DOCKER_USERNAME/diana-worker:$ARCH_TAG" --build-arg "RESIN_ARCH=$RESIN_ARCH" --build-arg "TINI_BIN=$TINI_BIN" docker/diana-worker
 
 script: true
 
