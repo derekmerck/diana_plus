@@ -23,15 +23,7 @@ before_install:
   - mkdir -p $HOME/.docker
   - echo '{"experimental":"enabled"}' > "$HOME/.docker/config.json"
 
-  - >
-    docker build -t "$DOCKER_USERNAME/diana-worker:$ARCH_TAG"
-           --build-arg "RESIN_ARCH=$RESIN_ARCH"
-           --build-arg "TINI_BINARY=$TINI_BINARY"
-           docker/diana-worker
-
-#  - >
-#    docker build -t derekmerck/diana-worker:amd64
-#           docker/diana-worker
+  - docker build -t "$DOCKER_USERNAME/diana-worker:$ARCH_TAG" --build-arg "RESIN_ARCH=$RESIN_ARCH" --build-arg "TINI_BINARY=$TINI_BINARY" docker/diana-worker
 
 script: true
 
