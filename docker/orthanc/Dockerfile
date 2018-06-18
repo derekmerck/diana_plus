@@ -1,12 +1,19 @@
-# Release Orthanc Image
+# xArch Orthanc Release Image
 # Derek Merck, Spring 2018
 
-FROM debian:stretch
+ARG RESIN_ARCH="intel-nuc"
+#ARG RESIN_ARCH="raspberrypi3"
+
+FROM resin/${RESIN_ARCH}-debian:stretch
 MAINTAINER Derek Merck <derek_merck@brown.edu>
 
-ARG TINI_VERSION=v0.18.0
-ARG TINI_BINARY=tini
-ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/${TINI_BINARY} /bin/tini
+# Args for use inside the cross-compiler must be declared inside the cross compiler!
+ARG TINI_VERS="v0.18.0"
+#ARG TINI_BIN=tini-armhf
+ARG TINI_BIN="tini"
+ARG DIANA_PW="passw0rd!"
+
+ADD https://github.com/krallin/tini/releases/download/${TINI_VERS}/${TINI_BIN} /bin/tini
 RUN chmod +x /bin/tini
 ENTRYPOINT ["/bin/tini", "--"]
 

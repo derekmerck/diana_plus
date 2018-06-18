@@ -27,11 +27,20 @@ services:
 
   # Diana-Worker service (should be able to build both amd64 and arm7 versions
   worker:
+#    build:
+#      context: diana-worker
+#      args:
+#        RESIN_ARCH:  raspberrypi3
+#        TINI_BINARY: tini-armhf
+#    image: derekmerck/diana-worker:armv7
+
     build:
       context: diana-worker
-#      args:
-#        TINI_BINARY: tini-armhf
-    image: derekmerck/diana-worker:armv7
+      args:
+        RESIN_ARCH:  intel-nuc
+        TINI_BINARY: tini
+    image: derekmerck/diana-worker:amd64
+
     command:    ["python3", "diana-star/app.py", "worker", "-n", "docker@%host", "-l", "INFO"]
     links:
       - broker
@@ -43,8 +52,21 @@ services:
 
   # Private orthanc dicom proxy service (only amd64 version, need osimis...)
   dicom:
+
+    build:
+      context: orthanc
+      args:
+        RESIN_ARCH:  intel-nuc
+        TINI_BINARY: tini
+    image: derekmerck/orthanc:amd64
+
 #    build:
 #      context: orthanc
+#      args:
+#        RESIN_ARCH:  raspberrypi3
+#        TINI_BINARY: tini-armhf
+#    image: derekmerck/orthanc:armv7l
+
     image: derekmerck/orthanc:latest
     ports:
       - "4242:4242"

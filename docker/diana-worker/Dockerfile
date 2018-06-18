@@ -1,4 +1,4 @@
-# Minimal x-arch Diana Worker Image
+# xArch Minimal Diana Worker Image
 # Derek Merck, Spring 2018
 #
 # - Presumes 'diana_services.yml' is copied or mounted to /etc/diana/services.yml
@@ -11,7 +11,8 @@ ARG RESIN_ARCH="intel-nuc"
 FROM resin/${RESIN_ARCH}-python
 MAINTAINER Derek Merck <derek_merck@brown.edu>
 
-RUN [ 'if [ "${RESIN_ARCH}" != "intel-nuc" ]; then cross-build-start; fi' ]
+# Intel doesn't like this and can't wrap it in 'if' b/c that is a breaking exec too
+#RUN [ 'if [ "${RESIN_ARCH}" != "intel-nuc" ]; then cross-build-start; fi' ]
 
 # Args for use inside the cross-compiler must be declared inside the cross compiler!
 ARG TINI_VERS="v0.18.0"
@@ -30,7 +31,7 @@ RUN apt update  \
     && chown -R diana /home/diana/source \
     && pip install -e /home/diana/source/packages/diana
 
-RUN [ 'if [ "${RESIN_ARCH}" != "intel-nuc" ]; then cross-build-end; fi' ]
+#RUN [ 'if [ "${RESIN_ARCH}" != "intel-nuc" ]; then cross-build-end; fi' ]
 
 ENV TZ=America/New_York
 USER diana

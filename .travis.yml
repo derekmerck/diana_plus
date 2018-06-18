@@ -25,10 +25,13 @@ before_install:
   - mkdir -p $HOME/.docker
   - echo '{"experimental":"enabled"}' > "$HOME/.docker/config.json"
 
-  # Login to docker for push
-  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+  # Register qemu as cross-compiler
+  - docker run --rm --privileged multiarch/qemu-user-static:register --reset
 
   - docker build -t "$DOCKER_USERNAME/$SERVICE:$ARCH_TAG" --build-arg "RESIN_ARCH=$RESIN_ARCH" --build-arg "TINI_BIN=$TINI_BIN" docker/$SERVICE
+
+  # Login to docker for push
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
 
   - docker push "$DOCKER_USERNAME/$SERVICE:$ARCH_TAG"
 
