@@ -1,4 +1,5 @@
 import os
+from typing import Union
 import attr
 from .dixel import Dixel
 from ..utils import DicomLevel, Pattern, gateway
@@ -12,7 +13,7 @@ class DicomFile(Pattern):
     def connect(self):
         return gateway.DicomFile(location=self.location)
 
-    def put(self, item, path=None, explode=None):
+    def put(self, item: Dixel, path: str=None, explode: str=None):
         fn = item.meta['FileName']
         data = item.data
 
@@ -25,9 +26,16 @@ class DicomFile(Pattern):
 
         self.gateway.write(fn, data, path=path, explode=explode )
 
-    def get(self, fn, path=None, pixels=False, file=False):
+    def get(self, item: Union[str, Dixel], path: str=None, view: str="tags") -> Dixel:
         # print("getting")
-        dcm, fp = self.gateway.read(fn, path=path, pixels=pixels)
+
+        # Get needs to accept oid's or items with oid's
+        if type(item) == Dixel:
+            fn = item.meta['FileName']
+        else:
+            fn = item
+
+        dcm, fp = self.gateway.read(fn, path=path, pixels=(view=="pixels"))
 
         _meta = {'PatientID': dcm[0x0010, 0x0020].value,
                  'AccessionNumber': dcm[0x0008, 0x0050].value,
@@ -42,11 +50,11 @@ class DicomFile(Pattern):
                  'FilePath': fp}
 
         _pixels = None
-        if pixels:
+        if view=="pixels":
             _pixels = dcm.pixel_array
 
         _file = None
-        if file:
+        if view=="file":
             with open(fp, 'rb') as f:
                 _file = f.read()
 

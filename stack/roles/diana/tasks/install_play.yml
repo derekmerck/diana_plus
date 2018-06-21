@@ -1,7 +1,7 @@
 ---
 
-# Should respects ENVs:
-# - BROKER_HOST, BROKER_PW
+# Respects ENVs:
+# - DIANA_BROKER, DIANA_RESULT
 
 - name: Add system reqs
   package:
@@ -24,14 +24,13 @@
 - name: Create diana user
   user:
     name: diana
-#    uid: 1000
     group: root
     state: present
-    home: /opt/diana
+    home: /home/diana
 
 - git:
-    repo: 'https://github.com/derekmerck/diana-star'
-    dest: /opt/diana
+    repo: 'https://github.com/derekmerck/diana_plus'
+    dest: /home/diana/source
 
 - pip:
     executable: pip3
@@ -39,3 +38,4 @@
       - /opt/diana/packages/diana
       - /opt/diana/packages/guid-mint
     editable: yes
+    become: yes

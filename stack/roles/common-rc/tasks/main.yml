@@ -1,5 +1,5 @@
 ---
-# tasks file for common
+# tasks file for ansible-container docker image builds
 
 - debug:
     msg: "Setting up common services for {{ rcd_arch }}/{{ ansible_architecture }}"

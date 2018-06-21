@@ -4,6 +4,7 @@ import logging, json
 import attr
 from .requester import Requester
 from ..dicom import DicomLevel
+from pprint import pprint
 
 @attr.s
 class Orthanc(Requester):
@@ -27,10 +28,10 @@ class Orthanc(Requester):
         url = self._url(resource)
         return self._put(url, data=data, auth=self.auth)
 
-    def post(self, resource, data=None, headers=None):
+    def post(self, resource, data=None, json=None, headers=None):
         logging.debug("Posting {} to orthanc".format(resource))
         url = self._url(resource)
-        return self._post(url, data=data, auth=self.auth, headers=headers)
+        return self._post(url, data=data, json=json, auth=self.auth, headers=headers)
 
     def delete(self, resource):
         logging.debug("Deleting {} from orthanc".format(resource))
@@ -102,7 +103,7 @@ class Orthanc(Requester):
         headers = {"Accept-Encoding": "identity",
                    "Accept": "application/json"}
 
-        r = self.post(resource, data=query, headers=headers)
+        r = self.post(resource, json=query, headers=headers)
 
         if not r:
             logging.warning("No reply from orthanc remote lookup")
@@ -117,10 +118,17 @@ class Orthanc(Requester):
             logging.warning("No answers from orthanc lookup")
             return
 
-        answers = r
+        # Need to iterate through these, so make sure it's a sequence rather than a
+        # single mapping
+        if type(r) == dict:
+            answers = [r]
+        else:
+            answers = r
+
         ret = []
-        for aid in answers:
-            resource = 'queries/{}/answers/{}/content?simplify'.format(qid, aid)
+
+        for i, aid in enumerate(answers):
+            resource = 'queries/{}/answers/{}/content?simplify'.format(qid, i)
             r = self.get(resource)
             if not r:
                 logging.warning("Bad answer from orthanc lookup")
@@ -130,7 +138,7 @@ class Orthanc(Requester):
 
             # If retrieve_dest defined, move data there (usually 1 study to here)
             if retrieve_dest:
-                resource = 'queries/{}/answers/{}/retrieve'.format(qid, aid)
+                resource = 'queries/{}/answers/{}/retrieve'.format(qid, i)
                 headers = {'content-type': 'application/text'}
                 rr = self.post(resource, data=retrieve_dest, headers=headers)
                 logging.debug(rr)

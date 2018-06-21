@@ -20,9 +20,16 @@ class Requester(object):
 
     def _return(self, response):
         if not response.status_code == 200:
-            raise requests.ConnectionError
+
+            logging.error(response.args[0].reason)
+            logging.error(response.args[0].headers)
+            logging.error(response.args[0].request.path_url)
+
+            raise requests.ConnectionError( response )
+
         elif response.headers.get('content-type').find('application/json') >= 0:
             return response.json()
+
         else:
             return response.content
 
@@ -34,8 +41,8 @@ class Requester(object):
         r = requests.put(url, data=data, headers=headers, auth=auth)
         return self._return(r)
 
-    def _post(self, url, data=None, headers=None, auth=None):
-        r = requests.post(url, data=data, headers=headers, auth=auth)
+    def _post(self, url, data=None, json=None, headers=None, auth=None):
+        r = requests.post(url, data=data, json=json, headers=headers, auth=auth)
         return self._return(r)
 
     def _delete(self, url, headers=None, auth=None):

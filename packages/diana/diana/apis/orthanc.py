@@ -1,6 +1,7 @@
 # DICOM node or proxy
 
 import logging
+from typing import Mapping, Sequence, Callable, Union
 import attr
 from diana.utils import DicomLevel, Pattern, gateway, dicom_clean_tags
 from .dixel import Dixel
@@ -14,6 +15,7 @@ class Orthanc(Pattern):
     user = attr.ib( default="orthanc" )
     password = attr.ib( default="orthanc" )
     gateway = attr.ib( init=False )
+    domains = attr.ib( factory=dict )
 
     @gateway.default
     def connect(self):
@@ -24,7 +26,20 @@ class Orthanc(Pattern):
     def location(self):
         return self.gateway._url()
 
-    def get(self, oid, level=DicomLevel.STUDIES, view="tags"):
+    def add_domain(self, domain: str, callback_dest: str=None ):
+        self.proxies[domain] = callback_dest
+
+    def get(self, item: Union[str, Dixel], level: DicomLevel=DicomLevel.STUDIES, view: str="tags") -> Dixel:
+
+        # Get needs to accept oid's or items with oid's
+        if type(item) == Dixel:
+            oid = item.oid()
+            level = item.level
+        elif type(item) == str:
+            oid = item
+        else:
+            raise ValueError("Can not get type {}, perhaps you chained after a 'put'?".format(type(item)))
+
         logging.info("{}: getting {}".format(self.__class__.__name__, oid))
 
         if view=="instance_tags":
@@ -34,6 +49,7 @@ class Orthanc(Pattern):
             level = DicomLevel.INSTANCES
             # Now get tags as normal
 
+        # print(oid)
         result = self.gateway.get_item(oid, level, view=view)
         if view == "tags":
             # We can clean tags and assemble a dixel
@@ -48,7 +64,7 @@ class Orthanc(Pattern):
             # Return the meta info or binary data
             return result
 
-    def put(self, item):
+    def put(self, item: Dixel):
         logging.info("{}: putting {}".format(self.__class__.__name__, item.id))
 
         if item.level != DicomLevel.INSTANCES:
@@ -57,20 +73,28 @@ class Orthanc(Pattern):
         if not item.file:
             logging.warning("Can only 'put' file data.")
             raise KeyError
-        return self.gateway.put_item(item.file)
+        result = self.gateway.put_item(item.file)
+
+        if not result:  # Success!
+            return item
+        else:
+            return result
 
     # Handlers
 
-    def anonymize(self, item, replacement_map=None):
+    def anonymize(self, item: Dixel, replacement_map: Callable[[dict],dict]=None, remove: bool=False) -> Dixel:
         replacement_dict = replacement_map(item.meta)
-        return self.gateway.anonymize(item.oid, item.level, replacement_dict=replacement_dict)
+        result = self.gateway.anonymize(item.oid, item.level, replacement_dict=replacement_dict)
+        if remove:
+            self.remove(item)
+        return self.get( result['id'], level=item.level )
 
-    def remove(self, item):
+    def remove(self, item: Dixel):
         oid = item.oid()
         level = item.level
         return self.gateway.delete_item(oid, level)
 
-    def find_item(self, item, domain="local", retrieve_dest=None):
+    def find_item(self, item: Dixel, domain: str="local", retrieve: bool=False):
         """
         Have some information about a dixel, want to find the STUID, SERUID, INSTUID
         """
@@ -122,15 +146,21 @@ class Orthanc(Pattern):
             return query
 
         query = find_item_query(item)
-        return self.requester.find(query, domain, retrieve_dest=retrieve_dest)
 
-    def send(self, item, peer=None, modality=None):
+        if retrieve:
+            retrieve_dest = self.domains[domain]
+        else:
+            retrieve_dest = None
+
+        return self.gateway.find(query, domain, retrieve_dest=retrieve_dest)
+
+    def send(self, item: Dixel, peer: str=None, modality: str=None):
         if modality:
             return self.gateway.send(item.id, item.level, modality_dest=modality)
         if peer:
             return self.gateway.send(item.id, item.level, peer_dest="peer")
 
-    def clear(self, desc="all"):
+    def clear(self, desc: str="all"):
         if desc == "all" or desc == "studies":
             self.inventory['studies'] = self.gateway.get("studies")
             for oid in self.inventory['studies']:

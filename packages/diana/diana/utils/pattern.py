@@ -18,6 +18,7 @@ class Pattern(object):
         return pattern
 
     def get(self, *args, **kwargs):
+        # print(self.__class__.__name__)
         raise NotImplementedError
 
     def put(self, *args, **kwargs):
@@ -25,6 +26,8 @@ class Pattern(object):
 
     def handle(self, *args, **kwargs):
         "Call a class-specific method"
+        # print(self.__class__.__name__)
+        # print(kwargs.get("method"))
         method = kwargs.get("method")
         func = self.__getattribute__(method)
         del(kwargs['method'])

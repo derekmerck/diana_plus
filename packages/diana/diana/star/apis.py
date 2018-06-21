@@ -1,6 +1,6 @@
-import logging
+import logging, sys
 import attr
-from ..apis import Orthanc, Redis, DicomFile, Splunk
+from ..apis import Orthanc, Redis, DicomFile, Splunk, Dixel
 from .tasks import do
 
 
@@ -17,7 +17,14 @@ def star(func):
         # logging.warning("wrapper: {}".format(kwargs))
         return do.apply_async(args, kwargs, **celery_args)
 
-    wrapper.s = do.s
+    def sig(*args, **kwargs):
+        return do.s(*args, method=func.__name__, **kwargs)
+
+    # print(dir(func))
+    # print(func.__module__)  # Here is teh method, where is the caller?
+    # print(sys._getframe(1).f_code.co_name )
+    wrapper.s = sig
+
     return wrapper
 
 
@@ -26,7 +33,7 @@ class DistribMixin(object):
     celery_queue = attr.ib( default='default' )
 
     @star
-    def get(self, id, **kwargs):
+    def get(self, item, **kwargs):
         pass
 
     @star
