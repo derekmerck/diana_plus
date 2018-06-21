@@ -1,0 +1,103 @@
+---
+# tasks file for local install of orthanc
+
+# Do not want to use the .deb build -- the runtime assertions are turned on!
+#- name: Install orthanc
+#  apt:
+#    name: orthanc
+
+- package:
+    name:
+      - build-essential
+      - unzip
+      - cmake
+      - mercurial
+      - uuid-dev
+      - libcurl4-openssl-dev
+      - liblua5.1-0-dev
+      - libgtest-dev
+      - libpng-dev
+      - libjpeg-dev
+      - libsqlite3-dev
+#      - libssl-dev
+      - libssl1.0-dev
+      - zlib1g-dev
+      - libdcmtk2-dev
+      - libboost-all-dev
+      - libwrap0-dev
+      - libjsoncpp-dev
+      - libpugixml-dev
+  become: yes
+
+- hg:
+    repo: 'https://bitbucket.org/sjodogne/orthanc'
+    dest: /opt/orthanc/src
+    force: yes
+  become: yes
+
+- name: Create /opt/orthanc/build
+  file:
+    path: /opt/orthanc/build
+    state: directory
+  become: yes
+
+- shell: |
+    cmake -DALLOW_DOWNLOADS=ON \
+          -DUSE_SYSTEM_MONGOOSE=OFF \
+          -DUSE_GOOGLE_TEST_DEBIAN_PACKAGE=ON \
+          -DDCMTK_LIBRARIES=dcmjpls \
+          -DSTATIC_BUILD=ON \
+          -DCMAKE_BUILD_TYPE=Release \
+          /opt/orthanc/src
+  args:
+    chdir: /opt/orthanc/build
+  become: yes
+
+- make:
+    chdir: /opt/orthanc/build
+  become: yes
+
+- make:
+    chdir: /opt/orthanc/build
+    target: install
+  become: yes
+
+- name: Create orthanc user
+  user:
+    name: orthanc
+#    uid: 1001
+    group: root
+    state: present
+    home: /opt/orthanc
+  become: yes
+
+- name: Create /var/lib/orthanc
+  file:
+    path: /var/lib/orthanc
+    state: directory
+    owner: orthanc
+    recurse: yes
+  become: yes
+
+- name: Create /etc/orthanc
+  file:
+    path: /etc/orthanc
+    state: directory
+    owner: orthanc
+  become: yes
+
+- name: Add orthanc.json
+  template:
+    src: orthanc.json.j2
+    dest: /etc/orthanc/orthanc.json
+#  notify: restart_orthanc_service
+  become: yes
+
+#- meta: flush_handlers
+
+#- name: Start orthanc
+#  service:
+#    name: orthanc
+#    enabled: true
+
+# Command is:  /usr/sbin/Orthanc /etc/orthanc/orthanc.json

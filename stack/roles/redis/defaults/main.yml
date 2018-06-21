@@ -1,0 +1,6 @@
+---
+
+redis_pw: "passw0rd!"
+
+containerize: False
+container_name: "broker-redis"

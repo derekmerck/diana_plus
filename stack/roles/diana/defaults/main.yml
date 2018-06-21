@@ -1,0 +1,15 @@
+---
+
+orthanc_host:     "{{ dockerhost_ip }}"
+orthanc_pw:       passw0rd!
+
+redis_host:       "{{ dockerhost_ip }}"
+redis_pw:         passw0rd!
+
+splunk_host:      "{{ dockerhost_ip }}"
+splunk_pw:        passw0rd!
+splunk_diana_tok: 123456789
+
+containerize: False
+container_name: diana-worker
+

@@ -1,0 +1,50 @@
+---
+# tasks file for containerized orthanc service
+
+- set_fact:
+    orthanc_pw: "{{ orthanc_pw }}"
+    orthanc_container: "{{ container_name }}"
+
+- name: Create /etc/orthanc
+  file:
+    path: /etc/orthanc
+    state: directory
+  become: yes
+
+- name: Add orthanc.json
+  template:
+    src: orthanc.json.j2
+    dest: /etc/orthanc/orthanc.json
+  become: yes
+
+- name: Setup Orthanc container
+  docker_container:
+    name: "{{ container_name }}"
+    image: jodogne/orthanc
+    state: started
+    ports:
+      - "{{orthanc_api_port}}:8042"
+      - "{{orthanc_dicom_port}}:4242"
+    volumes:
+      - "/etc/orthanc/orthanc.json:/etc/orthanc/orthanc.json:ro"
+    env:
+      TZ: America/New_York
+  when: not pg_backend
+  notify: restart_orthanc_container
+
+- name: Setup Orthanc-Plugins container
+  docker_container:
+    name: "{{ container_name }}"
+    image: jodogne/orthanc-plugins
+    state: started
+    ports:
+      - "{{orthanc_api_port}}:8042"
+      - "{{orthanc_dicom_port}}:4242"
+    links:
+      - "postgres-db"
+    volumes:
+      - "/etc/orthanc/orthanc.json:/etc/orthanc/orthanc.json:ro"
+    env:
+      TZ: America/New_York
+  when: pg_backend
+  notify: restart_orthanc_container

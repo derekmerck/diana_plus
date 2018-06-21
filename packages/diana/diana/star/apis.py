@@ -1,6 +1,6 @@
 import logging
 import attr
-from ..apis import Orthanc, Redis, DicomFile
+from ..apis import Orthanc, Redis, DicomFile, Splunk
 from .tasks import do
 
 
@@ -17,7 +17,7 @@ def star(func):
         # logging.warning("wrapper: {}".format(kwargs))
         return do.apply_async(args, kwargs, **celery_args)
 
-    wrapper.s = "signature"
+    wrapper.s = do.s
     return wrapper
 
 
@@ -49,5 +49,10 @@ class Redis(DistribMixin, Redis):
 
 
 @attr.s
-class File(DistribMixin, DicomFile):
+class DicomFile(DistribMixin, DicomFile):
     celery_queue = attr.ib( default="file" )
+
+
+@attr.s
+class Splunk(DistribMixin, Splunk):
+    pass

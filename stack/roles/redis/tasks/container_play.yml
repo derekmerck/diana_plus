@@ -1,0 +1,15 @@
+---
+- set_fact:
+    redis_pw: "{{ redis_pw }}"
+    redis_container: "{{ container_name }}"
+
+- name: Setup Redis container
+  docker_container:
+    name: "{{ container_name }}"
+    image: redis
+    command: redis-server
+    state: started
+    ports:
+      - "6379:6379"
+    env:
+      TZ: America/New_York

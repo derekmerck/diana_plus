@@ -16,8 +16,11 @@ env:
   matrix:
     - ARCH_TAG="amd64"  RESIN_ARCH="intel-nuc"    TINI_BIN="tini"       SERVICE="diana-worker"
     - ARCH_TAG="armv7l" RESIN_ARCH="raspberrypi3" TINI_BIN="tini-armhf" SERVICE="diana-worker"
-    - ARCH_TAG="amd64"  RESIN_ARCH="intel-nuc"    TINI_BIN="tini"       SERVICE="orthanc"
-    - ARCH_TAG="armv7l" RESIN_ARCH="raspberrypi3" TINI_BIN="tini-armhf" SERVICE="orthanc"
+
+# Not relevant until new version of orthanc is released
+#    - ARCH_TAG="amd64"  RESIN_ARCH="intel-nuc"    TINI_BIN="tini"       SERVICE="orthanc"
+# This takes too long
+#    - ARCH_TAG="armv7l" RESIN_ARCH="raspberrypi3" TINI_BIN="tini-armhf" SERVICE="orthanc"
 
 before_install:
 

@@ -1,0 +1,6 @@
+
+- import_tasks: container_play.yml
+  when: containerize
+
+- import_tasks: install_play.yml
+  when: not containerize

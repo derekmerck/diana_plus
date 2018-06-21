@@ -39,14 +39,20 @@ class DicomFile(object):
     def read(self, fn, path=None, explode=None, pixels=False):
         fp = self.fp(fn, path, explode)
 
+        logging.warning(fp)
+
         def is_dicom(fp):
-            with open(fp, 'rb') as f:
-                f.seek(0x80)
-                header = f.read(4)
-                magic = binascii.hexlify(header)
-                if magic == b"4449434d":
-                    # logging.debug("{} is dcm".format(fp))
-                    return True
+            try:
+                with open(fp, 'rb') as f:
+                    f.seek(0x80)
+                    header = f.read(4)
+                    magic = binascii.hexlify(header)
+                    if magic == b"4449434d":
+                        # logging.debug("{} is dcm".format(fp))
+                        return True
+            except:
+                pass
+
             # logging.debug("{} is NOT dcm".format(fp))
             return False
 

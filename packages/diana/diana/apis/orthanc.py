@@ -2,7 +2,7 @@
 
 import logging
 import attr
-from diana.utils import DicomLevel, Pattern, gateway
+from diana.utils import DicomLevel, Pattern, gateway, dicom_clean_tags
 from .dixel import Dixel
 
 
@@ -20,17 +20,29 @@ class Orthanc(Pattern):
         return gateway.Orthanc(host=self.host, port=self.port, path=self.path,
                                user=self.user, password=self.password)
 
+    @property
+    def location(self):
+        return self.gateway._url()
+
     def get(self, oid, level=DicomLevel.STUDIES, view="tags"):
-        logging.info("{}: getting {}".format(self.__class__.__name__, id))
+        logging.info("{}: getting {}".format(self.__class__.__name__, oid))
+
+        if view=="instance_tags":
+            result = self.get(oid, level, view="meta")
+            oid = result['instances'][0]
+            view = "tags"
+            level = DicomLevel.INSTANCES
+            # Now get tags as normal
 
         result = self.gateway.get_item(oid, level, view=view)
         if view == "tags":
-            # We can assemble a dixel
+            # We can clean tags and assemble a dixel
+            result = dicom_clean_tags(result)
             item = Dixel(meta=result, level=level)
             return item
         elif view == "file":
             # We can assemble a dixel
-            item = Dixel(file=result, level=level)
+            item = Dixel(meta={'oid': oid}, file=result, level=level)
             return item
         else:
             # Return the meta info or binary data
@@ -45,7 +57,7 @@ class Orthanc(Pattern):
         if not item.file:
             logging.warning("Can only 'put' file data.")
             raise KeyError
-        return self.requester.put_item(item.file)
+        return self.gateway.put_item(item.file)
 
     # Handlers
 

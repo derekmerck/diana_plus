@@ -1,0 +1,12 @@
+---
+# handlers file for orthanc
+
+- name: restart_orthanc_service
+  service:
+    name:  orthanc
+    state: restarted
+
+- name: restart_orthanc_container
+  docker_container:
+    name: "{{ container_name }}"
+    state: restarted

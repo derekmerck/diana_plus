@@ -1,0 +1,32 @@
+# https://gist.github.com/rbq/886587980894e98b23d0eee2a1d84933
+---
+
+- name:   Install prerequisites
+  package:
+    name:
+      - apt-transport-https
+      - ca-certificates
+      - curl
+      - software-properties-common
+      - python-pip
+    update_cache: True
+  become: yes
+
+- name:   Add Docker GPG key
+  apt_key:
+    url:  https://download.docker.com/linux/{{ ansible_os_family | lower }}/gpg
+    validate_certs: False
+  become: yes
+
+- name:   Add Docker APT repository
+  apt_repository:
+    repo: deb [arch={{ ansible_architecture }}] https://download.docker.com/linux/{{ ansible_os_family | lower }} {{ansible_distribution_release}} edge
+  become: yes
+
+- name:   Install Docker
+  apt:    name=docker-ce
+  become: yes
+
+- name:   Install docker-py
+  pip:    name=docker-py
+

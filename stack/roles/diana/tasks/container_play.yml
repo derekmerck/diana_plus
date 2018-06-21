@@ -1,0 +1,35 @@
+---
+- set_fact:
+    diana_container: "{{ container_name }}"
+
+- name: Create /etc/diana
+  file:
+    path: /etc/diana
+    state: directory
+  become: yes
+
+- name: Copy service config to host
+  template:
+    src:   services.yml.j2
+    dest:  /etc/diana/services.yml
+  become: yes
+
+# Should allow for multiple, give them unique ids
+- name: Start Worker
+  docker_container:
+    name:  "{{ container_name }}"
+    image: rcdiana/worker
+    state: started
+    # Worker will look for redis on localhost if not in env
+    links:
+      - "broker-redis"
+#      - "dicom-orthanc"
+#      - "index-splunk"
+    volumes:
+    # Mount service info
+      - "/etc/diana/services.yml:/etc/diana/services.yml:ro"
+    # File workers need access to host and shared
+      - "/data"
+    env:
+      TZ: America/New_York
+      PYTHONPATH: /diana/packages:/diana/apps/celery

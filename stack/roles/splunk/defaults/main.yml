@@ -1,0 +1,6 @@
+---
+
+splunk_pw: "passw0rd!"
+
+containerize: True
+container_name: "index-splunk"

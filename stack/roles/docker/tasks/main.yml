@@ -1,0 +1,38 @@
+---
+
+- name: Get docker version
+  shell: docker --version
+  register: result
+
+- debug:
+    var: result.stdout
+
+- name: Update docker if necessary
+  include_tasks: get_docker_play.yml
+  when: not "18" in result.stdout
+
+- name: Switch to experimental mode
+  lineinfile:
+    path: $HOME/.docker/config.json
+    line: |
+      {"experimental": "enabled"}
+    state: present
+    create: yes
+
+- name: Add ansible user to docker
+  user:
+    name: "{{ ansible_ssh_user }}"
+    group: docker
+  become: yes
+
+# This can be wrong the first time, it will report "linkdown" until
+# the docker bridge comes up once the first containers are connected
+- name:   Get dockerhost
+  shell:  /sbin/ip route | awk '/docker0/ { print $NF }'
+  register: dockerhost_response
+
+- set_fact:
+    dockerhost_ip: "{{ dockerhost_response.stdout }}"
+
+- debug:
+    msg:  "Setting dockerhost bridge addr {{ dockerhost_ip }}"

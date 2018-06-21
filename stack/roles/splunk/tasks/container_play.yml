@@ -1,0 +1,43 @@
+---
+- set_fact:
+    splunk_pw: "{{ splunk_pw }}"
+    splunk_container: "{{ container_name }}"
+
+- name: Setup Splunk container
+  docker_container:
+    name: "{{ container_name }}"
+    image: splunk/splunk
+    state: started
+    ports:
+      - "8000:8000"
+      - "8089:8089"
+    env:
+      TZ: America/New_York
+      SPLUNK_START_ARGS: "--accept-license"
+      SPLUNK_USER:  "splunk"
+      SPLUNK_CMD:   "edit user admin -password {{ splunk_pw }} -role admin -auth admin:changeme"
+      SPLUNK_CMD_1: "add index diana -auth admin:{{ splunk_pw }}"
+      SPLUNK_CMD_2: "http-event-collector enable -enable-ssl 0 -uri https://localhost:8089 -auth admin:{{ splunk_pw }}"
+      SPLUNK_CMD_3: "http-event-collector create diana_token 'diana index token' -index diana -uri https://localhost:8089 -auth admin:{{ splunk_pw }}"
+
+  # Splunk needs to come up before we try to list tokens
+  notify: "wait_for_splunk"
+
+- meta: flush_handlers
+
+# ------------------------------------
+# Set hec_token for the rest of the playbook
+# ------------------------------------
+- name: List available tokens
+  command:  "docker exec {{ container_name }} bin/splunk http-event-collector list -uri https://localhost:8089 -auth admin:{{ splunk_pw }}"
+  register: result
+
+#- debug:
+#    var: result
+
+- set_fact:
+    diana_tok: "{{ result.stdout | regex_findall(regexp) | first }}"
+  vars:
+    regexp: 'http:\/\/diana_token\n\s*token=(?P<diana_tok>.*)\n'
+- debug:
+    var: diana_tok

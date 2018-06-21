@@ -1,5 +1,10 @@
 .idea
 *.iml
+secrets/*
+*.retry
+
+.vagrant/*
+ignore/*
 
 __pycache__/
 build/

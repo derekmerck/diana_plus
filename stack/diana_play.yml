@@ -1,0 +1,115 @@
+
+# $ pushd test/vagrant && vagrant destroy && vagrant up && popd
+# $ ansible-playbook -i test/testbench.yml stack/diana_play.yml -t broker,diana-worker,archive,etc...
+
+# $ ansible-playbook -i secrets/lifespan_inventory.yml stack/diana_play.yml -t broker,diana-worker,archive,etc...
+
+# This script should generate a service config file based on the selected inventory and options, too
+---
+
+- name:  Setup a central task broker
+  hosts: broker
+  tags:  broker
+  tasks:
+
+    - name: Redis service
+      docker_container:
+        name: diana-broker
+        image: redis:latest
+        command: redis-server --requirepass {{ broker_password }}
+        ports:
+          - "6379:6379"
+        env:
+          TZ: America/New_York
+        state: started
+
+    - set_fact:
+        DIANA_BROKER: "redis://:{{ broker_password }}@{{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}:6379/1"
+        DIANA_RESULT: "redis://:{{ broker_password }}@{{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}:6379/2"
+
+    - debug:
+        var: DIANA_BROKER
+
+    - debug:
+        var: DIANA_RESULT
+
+
+# Only want to install cifts utils when queue includes "file"
+# Only want to install ai container when queue includes "gpu"
+
+- name:  Setup some diana-workers
+  hosts: diana-worker
+  tags:  diana-worker
+  tasks:
+
+    - name: Install cifs-utils
+      package:
+        name: cifs-utils
+        update_cache: true
+      become: true
+      when: "hostvars[inventory_hostname]['queues'].find('file') > -1"
+
+    - file:
+        name: /mnt/3dlab
+        state: directory
+      become: true
+      when: "hostvars[inventory_hostname]['queues'].find('file') > -1"
+
+    - name: Mount NAS file share
+      mount:
+        name: /mnt/storage
+        src: "//{{ hostvars['synology']['external_addr'] }}/{{ hostvars['synology']['share'] }}"
+        opts: "user={{ hostvars['synology']['cifs_user'] }},pass={{ hostvars['synology']['cifs_password'] }},iocharset=utf8,sec=ntlm"
+        fstype: cifs
+        state: mounted
+      become: true # as root
+      when: "hostvars[inventory_hostname]['queues'].find('file') > -1"
+
+    - name: diana-fs service
+      docker_container:
+        name: diana-worker
+        image: derekmerck/diana-worker:amd64
+        command: ["python3", "diana-star/app.py", "worker", "-n", "diana@%host",
+                  "-l", "INFO", "-Q", "{{ hostvars[inventory_hostname]['queues'] }}"]
+        volumes:
+          - "/mnt/storage:/mnt/storage"
+        env:
+          TZ: America/New_York
+          DIANA_BROKER: "{{ DIANA_BROKER }}"
+          DIANA_RESULT: "{{ DIANA_RESULT }}"
+        pull: yes
+        state: started
+
+# May need to explicitly allow connections on same host if RedHat/CentOS
+# $ sudo firewall-cmd --zone=public --add-port=6379/tcp
+# See https://github.com/moby/moby/issues/32138
+
+
+
+- name:  Setup an Orthanc node
+  hosts: dicom
+  tags:  dicom
+  tasks:
+
+    - file:
+        name: "/etc/orthanc"
+        state: directory
+      become: yes
+
+    - template:
+        src: "roles/orthanc/templates/orthanc.json.j2"
+        dest: "/etc/orthanc/orthanc.json"
+      become: yes
+
+    - name: Orthanc service
+      docker_container:
+        name: diana-dicom
+        image: derekmerck/orthanc:amd64
+        volumes:
+          - "/etc/orthanc:/etc/orthanc:ro"
+        ports:
+          - "8042:8042"
+        env:
+          TZ: America/New_York
+        state: started
+

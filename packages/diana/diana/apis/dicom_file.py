@@ -9,7 +9,7 @@ class DicomFile(Pattern):
     gateway = attr.ib( init=False )
 
     @gateway.default
-    def set_dfio(self):
+    def connect(self):
         return gateway.DicomFile(location=self.location)
 
     def put(self, item, path=None, explode=None):
@@ -23,11 +23,11 @@ class DicomFile(Pattern):
             os.path.splitext(fn)[-1:] != ".zip":
             fn = fn + '.zip'   # Archive format
 
-        self.dfio.write(fn, data, path=path, explode=explode )
+        self.gateway.write(fn, data, path=path, explode=explode )
 
     def get(self, fn, path=None, pixels=False, file=False):
         # print("getting")
-        dcm, fp = self.dfio.read(fn, path=path, pixels=pixels)
+        dcm, fp = self.gateway.read(fn, path=path, pixels=pixels)
 
         _meta = {'PatientID': dcm[0x0010, 0x0020].value,
                  'AccessionNumber': dcm[0x0008, 0x0050].value,

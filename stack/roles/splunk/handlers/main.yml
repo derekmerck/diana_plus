@@ -1,0 +1,8 @@
+---
+
+- name: "wait_for_splunk"
+  wait_for:
+    port: 8000
+    connect_timeout: 5
+    delay: 5
+    timeout: 30

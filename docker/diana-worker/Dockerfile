@@ -8,7 +8,7 @@
 ARG RESIN_ARCH="intel-nuc"
 #ARG RESIN_ARCH="raspberrypi3"
 
-FROM resin/${RESIN_ARCH}-python
+FROM resin/${RESIN_ARCH}-python:3
 MAINTAINER Derek Merck <derek_merck@brown.edu>
 
 # Intel doesn't like this and can't wrap it in 'if' b/c that is a breaking exec too

@@ -1,0 +1,10 @@
+---
+orthanc_title: "Orthanc"
+orthanc_aet: "ORTHANC"
+orthanc_pw: "passw0rd!"
+orthanc_api_port: "8042"
+orthanc_dicom_port: "4242"
+
+containerize: False
+container_name: dicom-orthanc
+pg_backend: False

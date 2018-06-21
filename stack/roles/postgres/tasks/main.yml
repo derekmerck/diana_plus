@@ -1,0 +1,23 @@
+---
+- name: Setup db container
+  docker_container:
+    name:  postgres-db
+    image: postgres
+    state: started
+#    volumes_from: data
+    ports:
+      - "5432:5432"
+    env:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: "{{ postgres_pw }}"
+
+#    log_driver: splunk
+#    log_options:
+#      splunk-token: "{{ diana_svc_tok }}"
+#      splunk-url: http://{{ indexer_ip | default(dockerhost_ip) }}:8088
+#      splunk-index: diana_svc
+#      splunk-source: postgres
+
+  notify: "wait_for_postgres"
+
+- meta: flush_handlers

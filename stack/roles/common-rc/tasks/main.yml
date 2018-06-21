@@ -1,0 +1,40 @@
+---
+# tasks file for common
+
+- debug:
+    msg: "Setting up common services for {{ rcd_arch }}/{{ ansible_architecture }}"
+
+- debug:
+    msg: "Changing root password to {{ root_pw }}"
+
+- name: change password for root user
+  become: true # do this as root
+  user:
+    name: root
+    password: "{{ root_pw }}"
+
+- name: Determine Tini version
+  set_fact:
+    tini_version: v0.18.0
+    tini_pkg: tini-armhf
+  when: rcd_arch=="armv7hf"
+
+- name: Determine Tini version
+  set_fact:
+    tini_version: v0.18.0
+    tini_pkg: tini-amd64
+  when: rcd_arch=="amd64"
+
+- debug:
+    var: tini_pkg
+
+- name: Install Tini
+  get_url:
+    dest: /usr/bin/tini
+    url: "https://github.com/krallin/tini/releases/download/{{ tini_version }}/{{ tini_pkg }}"
+    mode: 0775
+    validate_certs: no
+
+- name: Update apt-cache
+  apt:
+    update_cache: true

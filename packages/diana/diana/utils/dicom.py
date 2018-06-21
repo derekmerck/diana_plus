@@ -1,11 +1,11 @@
 # Diana-agnostic DICOM info
 
 import logging
-from enum import IntEnum
+from enum import Enum
 from hashlib import sha1
 from datetime import datetime
 
-class DicomLevel(IntEnum):
+class DicomLevel(Enum):
     PATIENTS  = 0
     STUDIES   = 1
     SERIES    = 2

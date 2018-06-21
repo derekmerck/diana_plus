@@ -10,7 +10,6 @@ from redis import Redis as RedisGateway
 class Redis(Pattern):
     host = attr.ib( default="localhost" )
     port = attr.ib( default="6379" )
-    path = attr.ib( default=None )
     password = attr.ib( default="passw0rd!" )
     db = attr.ib( default=0 )
     gateway = attr.ib( init=False )

@@ -1,2 +1,2 @@
 from .orthanc import Orthanc
-from .dcmfile import DicomFile
+from .dicom_file import DicomFile
