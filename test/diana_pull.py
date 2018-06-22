@@ -2,8 +2,6 @@
 service_cfg = "secrets/lifespan_services.yml"
 
 import logging, yaml
-
-from argparse import ArgumentParser
 from celery import chain
 from diana.star.apis import Orthanc, DicomFile, Dixel
 from diana.star.tasks import do

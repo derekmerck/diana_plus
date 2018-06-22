@@ -15,7 +15,8 @@ class Orthanc(Pattern):
     user = attr.ib( default="orthanc" )
     password = attr.ib( default="orthanc" )
     gateway = attr.ib( init=False )
-    domains = attr.ib( factory=dict )
+
+    domains = attr.ib( factory=dict )  # Mapping of domain name -> retreive destination names
 
     @gateway.default
     def connect(self):
@@ -26,8 +27,8 @@ class Orthanc(Pattern):
     def location(self):
         return self.gateway._url()
 
-    def add_domain(self, domain: str, callback_dest: str=None ):
-        self.proxies[domain] = callback_dest
+    def add_domain(self, domain: str, retrieve_dest: str=None ):
+        self.domains[domain] = retrieve_dest
 
     def get(self, item: Union[str, Dixel], level: DicomLevel=DicomLevel.STUDIES, view: str="tags") -> Dixel:
 
@@ -38,7 +39,7 @@ class Orthanc(Pattern):
         elif type(item) == str:
             oid = item
         else:
-            raise ValueError("Can not get type {}, perhaps you chained after a 'put'?".format(type(item)))
+            raise ValueError("Can not get type {}!".format(type(item)))
 
         logging.info("{}: getting {}".format(self.__class__.__name__, oid))
 
@@ -65,7 +66,7 @@ class Orthanc(Pattern):
             return result
 
     def put(self, item: Dixel):
-        logging.info("{}: putting {}".format(self.__class__.__name__, item.id))
+        logging.info("{}: putting {}".format(self.__class__.__name__, item.uid))
 
         if item.level != DicomLevel.INSTANCES:
             logging.warning("Can only 'put' Dicom instances.")
@@ -174,3 +175,22 @@ class Orthanc(Pattern):
 
     def info(self):
         return self.gateway.statistics()
+
+    @property
+    def instances(self):
+        oids = self.gateway.get("instances")
+        for oid in oids:
+            yield Dixel(meta={'oid': oid}, level=DicomLevel.INSTANCES)
+
+
+    @property
+    def series(self):
+        oids = self.gateway.get("series")
+        for oid in oids:
+            yield Dixel(meta={'oid': oid}, level=DicomLevel.SERIES)
+
+    @property
+    def studies(self):
+        oids = self.gateway.get("studies")
+        for oid in oids:
+            yield Dixel(meta={'oid': oid}, level=DicomLevel.STUDIES)

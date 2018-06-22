@@ -1,11 +1,12 @@
 import logging, sys
+from typing import Callable
 import attr
 from ..apis import Orthanc, Redis, DicomFile, Splunk, Dixel
 from .tasks import do
 
 
 # Decorator
-def star(func):
+def star(func: Callable):
     def wrapper(self, *args, **kwargs):
         celery_args = {}
         if self.celery_queue:

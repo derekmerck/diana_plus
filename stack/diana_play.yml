@@ -113,3 +113,37 @@
           TZ: America/New_York
         state: started
 
+
+
+
+- name:  Setup an index node
+  hosts: indexer
+  tags:  indexer
+  tasks:
+
+  - name: Splunk service
+    docker_container:
+      name: diana-index
+      image: splunk/splunk
+      state: started
+      ports:
+        - "8000:8000"
+        - "8088:8088"
+        - "8089:8089"
+      env:
+        TZ: America/New_York
+        SPLUNK_START_ARGS: "--accept-license"
+        SPLUNK_USER:  "splunk"
+        SPLUNK_CMD:   "edit user admin -password {{ indexer_password }} -role admin -auth admin:changeme"
+        SPLUNK_CMD_1: "add index diana -auth admin:{{ indexer_password }}"
+        SPLUNK_CMD_2: "http-event-collector enable -enable-ssl 0 -uri https://localhost:8089 -auth admin:{{ indexer_password }}"
+        SPLUNK_CMD_3: "http-event-collector create diana_token 'diana index token' -index diana -uri https://localhost:8089 -auth admin:{{ indexer_password }}"
+        # We don't need much disk, and vagrant has a small virtual drive.
+        SPLUNK_CMD_4: "set minfreemb 1000 -auth admin:passw0rd!"
+
+  - name: Restart Splunk service
+    docker_container:
+      name: diana-index
+      state: started
+      restart: yes
+

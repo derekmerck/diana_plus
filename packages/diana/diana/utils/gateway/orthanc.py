@@ -2,6 +2,7 @@
 
 import logging, json
 import attr
+from typing import Mapping
 from .requester import Requester
 from ..dicom import DicomLevel
 from pprint import pprint
@@ -18,29 +19,29 @@ class Orthanc(Requester):
 
     # Wrapper for requester calls
 
-    def get(self, resource, params=None):
+    def get(self, resource: str, params=None):
         logging.debug("Getting {} from orthanc".format(resource))
         url = self._url(resource)
         return self._get(url, params=params, auth=self.auth)
 
-    def put(self, resource, data=None):
+    def put(self, resource: str, data=None):
         logging.debug("Putting {} into orthanc".format(resource))
         url = self._url(resource)
         return self._put(url, data=data, auth=self.auth)
 
-    def post(self, resource, data=None, json=None, headers=None):
+    def post(self, resource: str, params=None, data=None, json: Mapping=None, headers: Mapping=None):
         logging.debug("Posting {} to orthanc".format(resource))
         url = self._url(resource)
-        return self._post(url, data=data, json=json, auth=self.auth, headers=headers)
+        return self._post(url, params=params, data=data, json=json, auth=self.auth, headers=headers)
 
-    def delete(self, resource):
+    def delete(self, resource: str):
         logging.debug("Deleting {} from orthanc".format(resource))
         url = self._url(resource)
         return self._delete(url, auth=self.auth)
 
     # item handling by oid and level
 
-    def get_item(self, oid, level, view):
+    def get_item(self, oid: str, level: DicomLevel, view: str):
         # View in [meta, tags, file*, image*, archive**]
         # * only instance level
         # * only series or study level
@@ -81,11 +82,11 @@ class Orthanc(Requester):
         headers = {'content-type': 'application/dicom'}
         self.post(resource, data=file, headers=headers)
 
-    def delete_item(self, oid, level):
+    def delete_item(self, oid: str, level: DicomLevel):
         resource = "{}/{}".format(level, oid)
         return self.delete(resource)
 
-    def anonymize_item(self, oid, level, replacement_map=None):
+    def anonymize_item(self, oid: str, level: DicomLevel, replacement_map: Mapping=None):
 
         resource = "{}/{}/anonymize".format(level, oid)
 
@@ -97,7 +98,7 @@ class Orthanc(Requester):
 
         return self.post(resource)
 
-    def find(self, query, remote_aet, retrieve_dest=None):
+    def find(self, query: Mapping, remote_aet: str, retrieve_dest: str=None):
 
         resource = 'modalities/{}/query'.format(remote_aet)
         headers = {"Accept-Encoding": "identity",
@@ -146,7 +147,7 @@ class Orthanc(Requester):
         # Returns an array of answers
         return ret
 
-    def send_item(self, oid, level, dest, dest_type):
+    def send_item(self, oid: str, dest: str, dest_type):
         resource = "/{}/{}/send".format(dest_type, dest)
         data = oid
         headers = {'content-type': 'application/text'}
@@ -154,3 +155,4 @@ class Orthanc(Requester):
 
     def statistics(self):
         return self.get("statistics")
+

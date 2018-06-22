@@ -1,10 +1,12 @@
 # Data cache
 
 import logging
+from typing import Union
 import attr
-from diana.utils import Pattern
 from dill import dumps, loads
 from redis import Redis as RedisGateway
+from diana.utils import Pattern
+from .dixel import Dixel
 
 @attr.s
 class Redis(Pattern):
@@ -18,7 +20,16 @@ class Redis(Pattern):
     def connect(self):
         return RedisGateway(host=self.host, port=self.port, db=self.db, password=self.password)
 
-    def get(self, id, **kwargs):
+    def get(self, item: Union[Dixel, str], **kwargs):
+
+        # Get needs to accept oid's or items with oid's
+        if type(item) == Dixel:
+            id = item.id
+        elif type(item) == str:
+            id = item
+        else:
+            raise ValueError("Can not get type {}!".format(type(item)))
+
         item = loads( self.gateway.get(id) )
         return item
 

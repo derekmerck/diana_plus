@@ -1,94 +1,75 @@
-import json, time, collections
+import json
+from typing import Union, Mapping
 from pprint import pprint, pformat
 
 from datetime import datetime
 import attr
-from splunklib import client, results
 from .dixel import Dixel
-from ..utils import Pattern
-from ..utils.gateway.requester import Requester
+from ..utils import Pattern, timerange, gateway, DicomLevel
+# splunk-sdk is 2.7 only, so diana.utils.gateway provides a minimal query/put replacement
+
+# Suppress insecure warning
+import urllib3
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 @attr.s
 class Splunk(Pattern):
     host = attr.ib( default="localhost" )
     port = attr.ib( default="8000" )
     user = attr.ib( default="splunk" )
+    protocol = attr.ib( default="https" )
     password = attr.ib( default="admin" )
+    hec_protocol = attr.ib( default="http" )
+    hec_port = attr.ib( default="8088" )
     gateway = attr.ib( init=False )
 
-    hec_port = attr.ib( default="8088" )
-    hec_tok = attr.ib( factory=dict )
-    hec_gateway = attr.ib( init=False )
+    hec_tokens = attr.ib( factory=dict )  # Mapping of domain name -> token
 
     @gateway.default
     def connect(self):
 
         # Create a Service instance and log in
-        gateway = client.connect(
+        return gateway.Splunk(
             host=self.host,
             port=self.port,
-            username=self.user,
-            password=self.password)
+            protocol = self.protocol,
+            hec_port=self.hec_port,
+            hec_protocol=self.hec_protocol,
+            user=self.user,
+            password=self.password
+        )
 
-        # Print installed apps to the console to verify login
-        for app in gateway.apps:
-            self.logger.debug(app.name)
+    def add_hec_token(self, name: str, token: str):
+        self.hec_tokens[name] = token
 
-        return gateway
+    def find_items(self,
+            query: Mapping,
+            tr: timerange=None):
 
-    @hec_gateway.default
-    def connect_hec(self):
-        return Requester(protocol="https", host=self.host, port=self.hec_port)
+        results = self.gateway.find_events(query, tr)
 
+        worklist = set()
+        for d in results:
+            worklist.add( Dixel(meta=d, level=DicomLevel.of( d['level'] ) ) )
 
-    def register_hec(self, name, token):
-        self.hec_toks[name] = token
-
-
-    def get(self, q, index=None, start=None, end=None, output_mode="json", **kwargs):
-
-        def make_iso(value):
-            if type(value) is type(datetime):
-                return value.isoformat()
-
-        kwargs.update( {"earliest_time": make_iso(start),
-                        "latest_time": make_iso(end)} )
-
-        q = 'search index="{index}" {q} | fields - _*'.format(index=index, q=q)
-
-        r = self.gateway.jobs.oneshot(q, output_mode=output_mode, **kwargs)
-
-        if output_mode == "json":
-            data = json.loads(r.read())['results']
-            self.logger.debug(pformat(data))
-            r = set()
-            for d in data:
-                r.add( Dixel(meta=d, level=d['level']))
-
-        return r
+        return worklist
 
 
-    def put(self, item, index="default", hec=None, host=None, sourcetype="_json"):
-
-        def epoch(dt):
-            tt = dt.timetuple()
-            return time.mktime(tt)
+    def put(self, item: Dixel, index: str, host: str, hec: str):
 
         try:
-            event_time = epoch(item['InstanceCreationDateTime'])
+            timestamp = item['InstanceCreationDateTime']
         except:
-            event_time = epoch(datetime.now())
+            timestamp = datetime.now()
+        event = item.meta
 
-        # time _must_ be at front
-        data = collections.OrderedDict([('time', event_time),
-                                        ('host', host),
-                                        ('sourcetype', sourcetype),
-                                        ('index', index),
-                                        ('event', item['meta'] )])
-        # logging.debug(pformat(data))
+        event['level'] = str(item.level)
+        event['oid'] = item.oid()
 
-        headers = {'Authorization': 'Splunk {0}'.format(self.hec_tok[hec])}
-        url = self.hec_gateway._url('services/collector/event')
+        token = self.hec_tokens[hec]
 
-        self.hec_gateway._post(url, data=data, headers=headers)
+        # at $time $event was reported by $host for $index with credentials $auth
+        self.gateway.put_event( timestamp=timestamp, event=event, host=host, index=index, token=token )
 
+        # Real auth description
+        # headers = {'Authorization': 'Splunk {0}'.format(self.hec_tok[hec])}

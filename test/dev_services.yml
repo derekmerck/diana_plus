@@ -3,6 +3,8 @@ orthanc:
   port: 8042
   user: orthanc
   password: passw0rd!
+  domains:
+    gepacs: diana
 
 redis:
   host: 192.168.33.10
@@ -11,8 +13,9 @@ redis:
 
 splunk:
   host: 192.168.33.10
-  port: 8000
+  port: 8089
   user: admin
   password: passw0rd!
-  hec_port: 8089
-  hec_token: ABCDEFGHIJK-1234567890
+  hec_port: 8088
+  hec_tokens:
+    diana: 880bfdec-e268-4053-bd9e-609362d97984

@@ -13,7 +13,7 @@ class DicomFile(Pattern):
     def connect(self):
         return gateway.DicomFile(location=self.location)
 
-    def put(self, item: Dixel, path: str=None, explode: str=None):
+    def put(self, item: Dixel, path: str=None, explode: str=None) -> Dixel:
         fn = item.meta['FileName']
         data = item.data
 
@@ -25,6 +25,7 @@ class DicomFile(Pattern):
             fn = fn + '.zip'   # Archive format
 
         self.gateway.write(fn, data, path=path, explode=explode )
+        return item
 
     def get(self, item: Union[str, Dixel], path: str=None, view: str="tags") -> Dixel:
         # print("getting")

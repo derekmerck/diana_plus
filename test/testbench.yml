@@ -16,12 +16,21 @@ all:
     indexer:
       hosts:
         dev-vagrant:
+      vars:
+        password: passw0rd!
+
     broker:
       hosts:
         dev-vagrant:
+      vars:
+        password: passw0rd!
+
     dicom:
       hosts:
         dev-vagrant:
+      vars:
+        password: passw0rd!
+
     diana-worker:
       hosts:
         dev-vagrant:
@@ -43,4 +52,6 @@ all:
 
   vars:
     cert_type: selfsigned
-    broker_password: passw0rd!
+    indexer_password: passw0rd!
+    broker_password:  passw0rd!
+    orthanc_password: passw0rd!

@@ -21,5 +21,5 @@ def do(*args, **kwargs):
 
 
 @app.task(name="message")
-def message(msg, *args, **kwargs):
+def message(msg: str, *args, **kwargs):
     print(msg)

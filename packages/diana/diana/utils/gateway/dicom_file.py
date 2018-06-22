@@ -1,6 +1,7 @@
 # Diana-agnostic Dicom file reading and writing
 
 import logging, os
+from typing import Sequence
 import attr
 import pydicom
 import binascii
@@ -10,7 +11,7 @@ import binascii
 class DicomFile(object):
     location = attr.ib(default="")
 
-    def fp(self, fn, path=None, explode=None):
+    def fp(self, fn: str, path: str=None, explode: Sequence=None):
         partial = self.location
         if path:
             partial = os.path.join(partial, path)
@@ -20,14 +21,14 @@ class DicomFile(object):
         fp = os.path.join(partial, fn)
         return fp
 
-    def explode_path(self, fn, stride, depth):
+    def explode_path(self, fn: str, stride: int, depth: int):
         expath = []
         for i in range(depth):
             block = fn[(i - 1) * stride:i * stride]
             expath.append(block)
         return os.path.join(*expath)
 
-    def write(self, fn, data, path=None, explode=None):
+    def write(self, fn: str, data, path: str=None, explode: Sequence=None):
         fp = self.fp(fn, path, explode)
 
         if not os.path.dirname(fn):
@@ -36,7 +37,7 @@ class DicomFile(object):
         with open(fp, 'wb') as f:
             f.write(data)
 
-    def read(self, fn, path=None, explode=None, pixels=False):
+    def read(self, fn: str, path: str=None, explode: Sequence=None, pixels: bool=False):
         fp = self.fp(fn, path, explode)
 
         logging.warning(fp)

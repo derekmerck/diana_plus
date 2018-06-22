@@ -11,21 +11,32 @@ class DicomLevel(Enum):
     SERIES    = 2
     INSTANCES = 3
 
+    @classmethod
+    def of(cls, value: str):
+        if value.lower()=="instances":
+            return DicomLevel.INSTANCES
+        elif value.lower()=="series":
+            return DicomLevel.SERIES
+        elif value.lower()=="studies":
+            return DicomLevel.STUDIES
+
+        return DicomLevel.PATIENTS
+
     def parent_level(self):
         if self == DicomLevel.PATIENTS:
             raise ValueError
-        return self + 1
+        return DicomLevel( int(self) + 1 )
 
     def child_level(self):
         if self == DicomLevel.INSTANCES:
             raise ValueError
-        return self - 1
+        return DicomLevel( int(self) - 1 )
 
     def __str__(self):
         return '{0}'.format(self.name.lower())
 
 
-def orthanc_id(PatientID, StudyInstanceUID, SeriesInstanceUID=None, SOPInstanceUID=None):
+def orthanc_id(PatientID, StudyInstanceUID, SeriesInstanceUID=None, SOPInstanceUID=None) -> str:
     if not SeriesInstanceUID:
         s = "|".join([PatientID, StudyInstanceUID])
     elif not SOPInstanceUID:
@@ -37,7 +48,7 @@ def orthanc_id(PatientID, StudyInstanceUID, SeriesInstanceUID=None, SOPInstanceU
     return '-'.join(d[i:i+8] for i in range(0, len(d), 8))
 
 
-def dicom_strftime( dtm ):
+def dicom_strftime( dtm: datetime ) -> str:
 
     try:
         # GE Scanner dt format
@@ -60,5 +71,5 @@ def dicom_strftime( dtm ):
     return ts
 
 
-def dicom_strptime( dts ):
+def dicom_strptime( dts: str ) -> datetime:
     return datetime.strptime( dts, "%Y%m%d%H%M%S" )

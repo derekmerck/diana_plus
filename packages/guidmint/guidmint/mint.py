@@ -50,10 +50,10 @@ class GUIDMint(object):
         return self.__class__.__name__
 
     @abstractmethod
-    def guid(self, value, *args, **kwargs):
+    def guid(self, value: str, *args, **kwargs):
         raise NotImplementedError
 
-    def pseudodob(self, guid, dob=None, age=None, ref_date=None, *args, **kwargs):
+    def pseudodob(self, guid, dob=None, age=None, ref_date=None, *args, **kwargs) -> datetime:
         random.seed(guid)
 
         if not dob:

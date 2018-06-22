@@ -2,9 +2,12 @@ import uuid, logging
 import attr
 
 
-@attr.s
+@attr.s(cmp=False, hash=None)
 class Pattern(object):
-    id = attr.ib(factory=uuid.uuid4)
+    uid = attr.ib(factory=uuid.uuid4)
+
+    def __hash__(self):
+        return hash(self.uid)
 
     @property
     def pattern(self):

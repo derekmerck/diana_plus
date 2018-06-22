@@ -39,7 +39,7 @@ class TimeRange(object):
             self.end = datetime.now() + _end
 
     @classmethod
-    def convert(cls, time_str):
+    def convert(cls, time_str: str) -> timedelta:
 
         # Check for 'now'
         if time_str == "now":
