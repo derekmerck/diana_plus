@@ -113,35 +113,28 @@ class Orthanc(Requester):
         qid = r["ID"]
         resource = 'queries/{}/answers'.format(qid)
 
-        self.get(resource)
+        r = self.get(resource)
 
         if not r:
             logging.warning("No answers from orthanc lookup")
             return
 
-        # Need to iterate through these, so make sure it's a sequence rather than a
-        # single mapping
-        if type(r) == dict:
-            answers = [r]
-        else:
-            answers = r
-
+        answers = r
         ret = []
-
-        for i, aid in enumerate(answers):
-            resource = 'queries/{}/answers/{}/content?simplify'.format(qid, i)
+        for aid in answers:
+            resource = 'queries/{}/answers/{}/content?simplify'.format(qid, aid)
             r = self.get(resource)
             if not r:
                 logging.warning("Bad answer from orthanc lookup")
                 return
-
             ret.append(r)
 
             # If retrieve_dest defined, move data there (usually 1 study to here)
             if retrieve_dest:
-                resource = 'queries/{}/answers/{}/retrieve'.format(qid, i)
+                resource = 'queries/{}/answers/{}/retrieve'.format(qid, aid)
                 headers = {'content-type': 'application/text'}
                 rr = self.post(resource, data=retrieve_dest, headers=headers)
+                logging.debug(retrieve_dest)
                 logging.debug(rr)
 
         # Returns an array of answers

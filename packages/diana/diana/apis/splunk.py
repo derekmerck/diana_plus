@@ -1,11 +1,11 @@
-import json
+import json, logging
 from typing import Union, Mapping
 from pprint import pprint, pformat
 
 from datetime import datetime
 import attr
 from .dixel import Dixel
-from ..utils import Pattern, timerange, gateway, DicomLevel
+from ..utils import Pattern, DatetimeInterval, gateway, DicomLevel
 # splunk-sdk is 2.7 only, so diana.utils.gateway provides a minimal query/put replacement
 
 # Suppress insecure warning
@@ -44,22 +44,29 @@ class Splunk(Pattern):
 
     def find_items(self,
             query: Mapping,
-            tr: timerange=None):
+            time_interval: DatetimeInterval=None):
 
-        results = self.gateway.find_events(query, tr)
+        results = self.gateway.find_events(query, time_interval)
 
-        worklist = set()
-        for d in results:
-            worklist.add( Dixel(meta=d, level=DicomLevel.of( d['level'] ) ) )
+        # logging.debug("Splunk query: {}".format(query))
+        # logging.debug("Splunk results: {}".format(results))
 
-        return worklist
+        if results:
+            worklist = set()
+            for d in results:
+                worklist.add( Dixel(meta=d, level=DicomLevel.of( d['level'] ) ) )
+
+            # logging.debug(worklist)
+
+            return worklist
 
 
     def put(self, item: Dixel, index: str, host: str, hec: str):
 
         try:
-            timestamp = item['InstanceCreationDateTime']
+            timestamp = item.meta['InstanceCreationDateTime']
         except:
+            logging.warning("Failed to get 'InstanceCreationDateTime', using now()")
             timestamp = datetime.now()
         event = item.meta
 

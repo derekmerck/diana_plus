@@ -48,11 +48,11 @@ def orthanc_id(PatientID, StudyInstanceUID, SeriesInstanceUID=None, SOPInstanceU
     return '-'.join(d[i:i+8] for i in range(0, len(d), 8))
 
 
-def dicom_strftime( dtm: datetime ) -> str:
+def dicom_strptime( dts: str ) -> datetime:
 
     try:
         # GE Scanner dt format
-        ts = datetime.strptime( dtm , "%Y%m%d%H%M%S")
+        ts = datetime.strptime( dts , "%Y%m%d%H%M%S")
         return ts
     except ValueError:
         # Wrong format
@@ -60,16 +60,20 @@ def dicom_strftime( dtm: datetime ) -> str:
 
     try:
         # Siemens scanners use a slightly different aggregated format with fractional seconds
-        ts = datetime.strptime( dtm , "%Y%m%d%H%M%S.%f")
+        ts = datetime.strptime( dts , "%Y%m%d%H%M%S.%f")
         return ts
     except ValueError:
         # Wrong format
         pass
 
-    logging.error("Can't parse date time string: {0}".format( dtm ))
+    logging.error("Can't parse date time string: {0}".format( dts ))
     ts = datetime.now()
     return ts
 
 
-def dicom_strptime( dts: str ) -> datetime:
-    return datetime.strptime( dts, "%Y%m%d%H%M%S" )
+def dicom_strftime( dt: datetime ) -> str:
+    return dt.strftime( "%Y%m%d%H%M%S" )
+
+
+def dicom_strftime2( dt: datetime ) -> (str, str):
+    return (dt.strftime( "%Y%m%d" ), dt.strftime( "%H%M%S" ))

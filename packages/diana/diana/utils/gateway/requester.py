@@ -23,11 +23,7 @@ class Requester(object):
 
     def _return(self, response: requests.Response):
         if response.status_code < 200 or response.status_code > 299:
-
-            logging.error(response.args[0].reason)
-            logging.error(response.args[0].headers)
-            logging.error(response.args[0].request.path_url)
-
+            logging.error(response)
             raise requests.ConnectionError( response )
 
         elif response.headers.get('content-type').find('application/json') >= 0:

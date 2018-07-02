@@ -1,11 +1,12 @@
 import setuptools
+from guidmint import __version__
 
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setuptools.setup(
     name="guidmint",
-    version="0.11.0",
+    version=__version__,
     author="Derek Merck",
     author_email="derek_merck@brown.edu",
     description="Global unique ID and pseudonym generator",

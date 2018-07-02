@@ -41,11 +41,14 @@ class Orthanc(Pattern):
         else:
             raise ValueError("Can not get type {}!".format(type(item)))
 
-        logging.info("{}: getting {}".format(self.__class__.__name__, oid))
+        logging.debug("{}: getting {}".format(self.__class__.__name__, oid))
 
         if view=="instance_tags":
             result = self.get(oid, level, view="meta")
-            oid = result['instances'][0]
+
+            # logging.debug(result)
+
+            oid = result['Instances'][0]
             view = "tags"
             level = DicomLevel.INSTANCES
             # Now get tags as normal
@@ -66,7 +69,7 @@ class Orthanc(Pattern):
             return result
 
     def put(self, item: Dixel):
-        logging.info("{}: putting {}".format(self.__class__.__name__, item.uid))
+        logging.debug("{}: putting {}".format(self.__class__.__name__, item.uid))
 
         if item.level != DicomLevel.INSTANCES:
             logging.warning("Can only 'put' Dicom instances.")
@@ -141,19 +144,31 @@ class Orthanc(Pattern):
 
             # logging.debug(pformat(q))
 
-            query = {'Level': str(item.level),
-                     'Query': q}
+            return q
 
-            return query
+        q = find_item_query(item)
 
-        query = find_item_query(item)
+        return self.find(q, domain, retrieve=retrieve)
+
+    def find(self, q: Mapping, level: DicomLevel, domain: str, retrieve: bool=False):
+
+        query = {'Level': str(level),
+                 'Query': q}
 
         if retrieve:
             retrieve_dest = self.domains[domain]
         else:
             retrieve_dest = None
 
-        return self.gateway.find(query, domain, retrieve_dest=retrieve_dest)
+        results = self.gateway.find(query, domain, retrieve_dest)
+
+        if results:
+            worklist = set()
+            for d in results:
+                worklist.add( Dixel(meta=d, level=level ) )
+
+            return worklist
+
 
     def send(self, item: Dixel, peer: str=None, modality: str=None):
         if modality:

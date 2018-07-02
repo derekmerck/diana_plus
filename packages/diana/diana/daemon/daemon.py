@@ -1,5 +1,4 @@
-from .utils import DicomLevel
-from .apis.utils import copy_items
+from ..utils import DicomLevel
 
 
 def index_series( archive, index, timerange=("-10m","now") ):

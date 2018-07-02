@@ -11,34 +11,34 @@ Prepare a DICOM tag set for ingestion into splunk:
 import logging, json
 from pprint import pprint, pformat
 from .smart_encode import SmartJSONEncoder
-from .dicom import dicom_strftime
+from .dicom import dicom_strptime
 
 
 def parse_timestamps(tags):
 
     # Convert DICOM Date/Times into ISO DateTimes
     try:
-        t = dicom_strftime(tags['StudyDate'] + tags['StudyTime'])
+        t = dicom_strptime(tags['StudyDate'] + tags['StudyTime'])
         tags['StudyDateTime'] = t
     except KeyError:
         pass
 
     try:
-        t = dicom_strftime(tags['SeriesDate'] + tags['SeriesTime'])
+        t = dicom_strptime(tags['SeriesDate'] + tags['SeriesTime'])
         tags['SeriesDateTime'] = t
     except KeyError:
         pass
 
     # Not all instances have ObservationDateTime
     try:
-        t = dicom_strftime(tags['ObservationDateTime'])
+        t = dicom_strptime(tags['ObservationDateTime'])
         tags['ObservationDateTime'] = t
     except KeyError:
         pass
 
     # Not all instances have an InstanceCreationDate/Time
     try:
-        t = dicom_strftime(tags['InstanceCreationDate'] + tags['InstanceCreationTime'])
+        t = dicom_strptime(tags['InstanceCreationDate'] + tags['InstanceCreationTime'])
         tags['InstanceCreationDateTime'] = t
     except KeyError:
         pass
@@ -131,7 +131,7 @@ def simplify_content_sequence(tags):
             value = item['UID']
             # logging.debug('Found uid value')
         elif type_ == 'DATETIME':
-            value = dicom_strftime(item['DateTime'])
+            value = dicom_strptime(item['DateTime'])
             # logging.debug('Found date/time value')
         elif type_ == 'CODE':
             try:
@@ -166,7 +166,7 @@ def simplify_structured_tags(tags):
         key = tags['ConceptNameCodeSequence'][0]['CodeMeaning']
         value = simplify_content_sequence(tags)
 
-        t = dicom_strftime(tags['ContentDate'] + tags['ContentTime'])
+        t = dicom_strptime(tags['ContentDate'] + tags['ContentTime'])
         value['ContentDateTime'] = t
 
         del(tags['ConceptNameCodeSequence'])

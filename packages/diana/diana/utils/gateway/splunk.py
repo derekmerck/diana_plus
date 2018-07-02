@@ -11,6 +11,8 @@ import attr
 from bs4 import BeautifulSoup
 from .requester import Requester
 from ..smart_encode import SmartJSONEncoder
+from pprint import pformat
+from datetime import timedelta
 
 
 @attr.s
@@ -38,8 +40,8 @@ class Splunk(Requester):
         return self._put(url, data=data, auth=self.auth)
 
     def post(self, resource: str, params=None, data=None, json: Mapping=None, headers: Mapping=None):
-        logging.debug("Posting {} to splunk".format(resource))
         url = self._url(resource)
+        logging.debug("Posting {} to splunk".format(url))
         return self._post(url, params=params, data=data, json=json, auth=self.auth, headers=headers)
 
     def delete(self, resource: str):
@@ -53,20 +55,23 @@ class Splunk(Requester):
             earliest = "-1d"
             latest = "now"
         else:
-            earliest = timerange.start.isoformat()
-            latest = timerange.end.isoformat()
+            # TODO: Fix padding for the time range in Splunk b/c Splunk and the PACS disagree on time intervals
+            earliest = (timerange.earliest - timedelta(minutes=2)).isoformat()
+            latest = (timerange.latest + timedelta(minutes=2)).isoformat()
 
-        # q = "search index=default".format("default")
-
-        # q = 'search index="{index}" {query} | fields - _*'.format(index=index, query=query)
+        # logging.debug("Earliest: {}\n           Latest:   {}".format(earliest, latest))
 
         response = self.post('services/search/jobs',
-                             params={'earliest_time': earliest,
-                                     'latest_time': latest},
-                             data="search={0}".format(q))
+
+                             data = {'search': q,
+                                     'earliest_time': earliest,
+                                     'latest_time': latest})
 
         soup = BeautifulSoup(response, 'xml')  # Should have returned xml
-        sid = soup.find('sid').string
+        sid = soup.find('sid').string  # If it returns multiple sids, it didn't parse the request and did a "GET"
+
+        # logging.debug(pformat(soup))
+        logging.debug(sid)
 
         def poll_until_done(sid):
             isDone = False
@@ -76,6 +81,9 @@ class Splunk(Requester):
                 time.sleep(1)
                 response = self.get('services/search/jobs/{0}'.format(sid),
                                     params={'output_mode': 'json'})
+
+                # logging.debug(response)
+
                 isDone = response['entry'][0]['content']['isDone']
                 status = response['entry'][0]['content']['dispatchState']
                 if i % 5 == 1:
@@ -95,7 +103,12 @@ class Splunk(Requester):
                                         'offset': offset})
 
             for r in response['results']:
-                result.append( json.loads(r['_raw']) )
+
+                try:
+                    data = json.loads(r['_raw'])
+                    result.append( data )
+                except (json.decoder.JSONDecodeError, KeyError):
+                    logging.warning("Skipping non-json string: {}".format(pformat(r)))
             i = i+1
 
         return result

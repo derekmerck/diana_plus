@@ -27,7 +27,7 @@ from datetime import datetime, timedelta
 import os
 from abc import abstractmethod
 
-__version__ = "0.11.0"
+__version__ = "0.12.0"
 
 DEFAULT_MAX_DATE_OFFSET = int(365/2)   # generated pseudodob is within 6 months
 DEFAULT_HASH_PREFIX_LENGTH = 16  # 8 = 64bits, -1 = entire value

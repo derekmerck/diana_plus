@@ -33,6 +33,36 @@ class Redis(Pattern):
         item = loads( self.gateway.get(id) )
         return item
 
+    def remove(self, item: Union[Dixel, str] ):
+
+        if type(item) == Dixel:
+            id = item.id
+        elif type(item) == str:
+            id = item
+        else:
+            raise ValueError("Can not remove type {}!".format(type(item)))
+
+        self.gateway.delete(id)
+
     def put(self, item, **kwargs):
         self.gateway.set( item.id, dumps(item) )
+
+    def sput(self, sid, set):
+        for item in set:
+            self.sadd(sid, item)
+
+    def sget(self, id):
+        result = set()
+        for iid in self.gateway.smembers(id):
+            item = self.get(iid)
+            result.add(item)
+        return result
+
+    def sadd(self, sid, item):
+        self.gateway.sput(id, item.id)
+        self.put(item)
+
+    def sremove(self, sid, iid):
+        self.gateway.srem(sid, iid)
+
 
