@@ -141,6 +141,8 @@
         # We don't need much disk, and vagrant has a small virtual drive.
         SPLUNK_CMD_4: "set minfreemb 1000 -auth admin:passw0rd!"
 
+        # TODO: Also need to set no truncation on events for dose records
+
   - name: Restart Splunk service
     docker_container:
       name: diana-index

@@ -1,3 +1,3 @@
 from .orthanc import Orthanc
-from .dicom_file import DicomFile
+from .file_handler import DicomFile, TextFile, ImageFile
 from .splunk import Splunk

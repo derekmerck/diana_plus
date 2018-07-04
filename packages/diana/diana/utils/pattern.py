@@ -9,6 +9,9 @@ class Pattern(object):
     def __hash__(self):
         return hash(self.uid)
 
+    def __eq__(self, other):
+        return hash(self) == hash(other)
+
     @property
     def pattern(self):
         pattern = {'class': self.__class__.__name__}

@@ -1,8 +1,6 @@
 import attr
+from .report import RadiologyReport
 from ..utils import Pattern, DicomLevel, orthanc_id
-from PIL.Image import fromarray
-
-
 
 
 @attr.s(cmp=False, hash=None)
@@ -11,6 +9,7 @@ class Dixel(Pattern):
     meta  = attr.ib(factory=dict)
     pixels = attr.ib(default=None)
     file  = attr.ib(default=None)
+    report = attr.ib(default=None, type=RadiologyReport)
 
     # Not always the best idea, can't put them in a set if the AN is identical
     def __hash__(self):
@@ -22,8 +21,6 @@ class Dixel(Pattern):
             # If not enough info for oid, use the uid from Pattern
             return Pattern.__hash__(self)
 
-    def __eq__(self, other):
-        return hash(self) == hash(other)
 
     @property
     def AccessionNumber(self):
@@ -51,10 +48,10 @@ class Dixel(Pattern):
         else:
             raise ValueError("No such DICOM level: {}".format(level))
 
-    def save_image(self, fp):
+    def get_pixels(self):
         if self.meta['PhotometricInterpretation'] == "RGB":
             pixels = self.pixels.reshape([self.pixels.shape[1], self.pixels.shape[2], 3])
         else:
             pixels = self.pixels
-        im = fromarray(pixels)
-        im.save(fp)
+
+        return pixels

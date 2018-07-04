@@ -1,3 +1,12 @@
+"""
+Diana CT Dose Report Harvester
+Merck, Summer 2018
+
+Relatively generic implementation: finds all recent SR series from CT
+studies and copies anything new to Splunk.  Replace `discover_recent`
+with more complex discrimination if necessary.
+"""
+
 import logging
 import attr
 from ..utils import DicomLevel
@@ -5,7 +14,7 @@ from .harvester import Harvester
 
 
 @attr.s
-class HarvestCTSR(Harvester):
+class DoseReportHarvester(Harvester):
 
     # TODO: Don't want to deal with these individually -- want batches we can chain and chord together.
 

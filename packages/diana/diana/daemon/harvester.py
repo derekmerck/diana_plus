@@ -1,3 +1,13 @@
+"""
+Diana Harvester (Monitor service)
+Merck, Summer 2018
+
+Monitor any Diana service on a time interval. Subclass with
+new `discover` and `handle` functions to customize it for a
+particular class.  See `harvest_dose.py` for an example.
+
+"""
+
 import logging
 import attr
 from ..utils import DatetimeInterval
@@ -17,7 +27,7 @@ class Harvester(object):
     end   = attr.ib(default=None)
     time_window = attr.ib( init=False, type=DatetimeInterval )
 
-    repeat_until = attr.ib( default=True )  # stop condition, true = once
+    repeat_while = attr.ib( default=True )  # stop condition, true = once
 
     @time_window.default
     def set_dtinterval(self):
@@ -25,7 +35,7 @@ class Harvester(object):
 
     def run(self):
 
-        while self.repeat_until:
+        while self.repeat_while:
             self.collect()
             self.time_window.next()
 
@@ -34,13 +44,13 @@ class Harvester(object):
         recent = self.discover_recent()
 
         if not recent:
-            logging .debug("No recent items, nothing to do")
+            logging.debug("No recent items, nothing to do")
             return
 
         indexed = self.discover_indexed()
 
         if not indexed:
-            logging .debug("No items indexed, need to collect {} recent items".format(len(recent)))
+            logging.debug("No items indexed, need to collect {} recent items".format(len(recent)))
             new_items = recent
             self.handle_worklist(new_items)
             return

@@ -3,7 +3,7 @@
 pull-it.py
 Derek Merck, Winter 2018
 
-Command-line tool for Orthanc proxy retrieve from modality.
+Wrapper command-line tool for Orthanc proxy retrieve from modality.
 
 > python3 pull-it.py -accession XYZ -series "thin * brain -p my_proxy -d my_pacs -s secrets.yml
 
@@ -21,10 +21,11 @@ def parse_args():
     parser = ArgumentParser("pull-it")
     parser.add_argument("-a", "--accession", required=True)
     parser.add_argument("-s", "--secrets", default="./secrets.yml")
-    parser.add_argument("-p", "--proxy", required=True)
 
-    parser.add_argument("-d", "--domain", default=None)
-    parser.add_argument("-r", "--series", default=None)
+    parser.add_argument("-p", "--proxy",   required=True)
+    parser.add_argument("-q", "--domain",  default=None,
+                                           help="Orthanc remote aet")
+    parser.add_argument("-r", "--series",  default=None)
 
     opts = parser.parse_args()
 

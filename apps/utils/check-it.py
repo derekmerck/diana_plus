@@ -3,7 +3,7 @@
 check-it.py
 Derek Merck, Summer 2018
 
-Command-line tool for Splunk query.
+Wrapper command-line tool for Splunk query.
 
 > python3 check-it.py --query "index=dose_report" -e "-1d" -l now -i my_splunk -s secrets.yml
 
@@ -19,11 +19,11 @@ from diana.utils import DatetimeInterval
 
 def parse_args():
     p = ArgumentParser("check-it")
-    p.add_argument("-q", "--query", required=True)
+    p.add_argument("-q", "--query",    required=True)
     p.add_argument("-e", "--earliest", default="-1d")
-    p.add_argument("-l", "--latest", default="now")
-    p.add_argument("-i", "--index", default="splunk")
-    p.add_argument("-s", "--secrets", default="secrets.yml")
+    p.add_argument("-l", "--latest",   default="now")
+    p.add_argument("-i", "--index",    default="splunk")
+    p.add_argument("-s", "--secrets",  default="secrets.yml")
 
     opts = p.parse_args()
     return opts

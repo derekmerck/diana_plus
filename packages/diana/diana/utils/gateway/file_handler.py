@@ -5,10 +5,10 @@ from typing import Sequence
 import attr
 import pydicom
 import binascii
-
+from PIL.Image import fromarray
 
 @attr.s
-class DicomFile(object):
+class FileHandler(object):
     location = attr.ib(default="")
 
     def fp(self, fn: str, path: str=None, explode: Sequence=None):
@@ -27,6 +27,40 @@ class DicomFile(object):
             block = fn[(i - 1) * stride:i * stride]
             expath.append(block)
         return os.path.join(*expath)
+
+
+@attr.s
+class ImageFile(FileHandler):
+
+    def write(self, fn: str, data, path: str=None, explode: Sequence=None):
+        fp = self.fp(fn, path, explode)
+
+        if not os.path.dirname(fn):
+            os.makedirs(os.path.dirname(fn))
+
+        im = fromarray(data)
+        im.save(fp)
+
+
+@attr.s
+class TextFile(FileHandler):
+
+    def write(self, fn: str, data: str, path: str=None, explode: Sequence=None):
+        fp = self.fp(fn, path, explode)
+
+        if not os.path.dirname(fn):
+            os.makedirs(os.path.dirname(fn))
+
+        with open(fp, 'w') as f:
+            f.write(data)
+
+    def read(self, *args, **kwargs):
+        # There is really not much need to read from a file-by-file text corpus into Dixels
+        raise NotImplementedError
+
+
+@attr.s
+class DicomFile(FileHandler):
 
     def write(self, fn: str, data, path: str=None, explode: Sequence=None):
         fp = self.fp(fn, path, explode)

@@ -3,25 +3,25 @@
 dcm2im.py
 Derek Merck, Spring 2018
 
-Convert pixels from a DICOM format image or directory into a standard
-PIL format (png, jpg).
+Wrapper command-line tool to convert pixels from a DICOM format file or directory
+into a standard image format (png, jpg).
 
 > python dcm2py.py -i im000001.dcm
 """
 
 import os, glob, logging
 from argparse import ArgumentParser
-from diana.apis import DicomFile, Dixel
+from diana.apis import DicomFile, ImageFile
 
 
 def parse_args():
 
     p = ArgumentParser("dcm2im")
-    p.add_argument("--infile", "-i",  required=False)
-    p.add_argument("--outfile", "-o", required=False)
-    p.add_argument("--indir", "-I",   required=False)
-    p.add_argument("--outdir", "-O",  required=False)
-    p.add_argument("--format", "-f",  default="png", choices=['png', 'jpg'])
+    p.add_argument("-i", "--infile",  required=False)
+    p.add_argument("-o", "--outfile", required=False)
+    p.add_argument("-I", "--indir",   required=False)
+    p.add_argument("-O", "--outdir",  required=False)
+    p.add_argument("-f", "--format",  default="png", choices=['png', 'jpg'])
     opts = p.parse_args()
     return opts
 
@@ -29,7 +29,7 @@ def parse_args():
 def convert_file(infile, outfile):
 
     dixel = DicomFile().get(infile)
-    dixel.save_image(outfile)
+    ImageFile().put(dixel, outfile)
 
 
 def convert_dir(indir, outdir, format):

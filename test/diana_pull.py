@@ -17,7 +17,7 @@ def pull_and_send(item: Dixel, source: Orthanc, dest: str):
 # star chain
 def pull_and_send_star(item, source, dest):
 
-    f = chain( do.s( item, "find_item", pattern=source.pattern, retrive=True ) |
+    f = chain( do.s( item, "find_item", pattern=source.pattern, retrieve=True ) |
            do.s( "anonymize", pattern=source.pattern, remove=True ) |
            do.s( "send", pattern=source.pattern, peer=dest ) )
     return f
@@ -32,7 +32,7 @@ def pull_and_save(item: Dixel, source: Orthanc, dest: DicomFile):
 
 def pull_and_save_star(item: Dixel, source: Orthanc, dest: DicomFile):
 
-    f = chain( do.s( item, "find_item", pattern=source.pattern, retrive=True ) |
+    f = chain( do.s( item, "find_item", pattern=source.pattern, retrieve=True ) |
            do.s( "anonymize", pattern=source.pattern, remove=True ) |
            do.s( "get", pattern=source.pattern, view="file" ) |
            do.s( "put", pattern=dest ) )

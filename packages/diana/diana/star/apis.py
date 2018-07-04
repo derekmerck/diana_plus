@@ -22,7 +22,7 @@ def star(func: Callable):
         return do.s(*args, method=func.__name__, **kwargs)
 
     # print(dir(func))
-    # print(func.__module__)  # Here is teh method, where is the caller?
+    # print(func.__module__)  # Here is the method, where is the caller?
     # print(sys._getframe(1).f_code.co_name )
     wrapper.s = sig
 

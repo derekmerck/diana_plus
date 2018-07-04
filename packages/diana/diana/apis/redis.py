@@ -1,7 +1,8 @@
 # Data cache
 
 import logging
-from typing import Union
+from uuid import UUID
+from typing import Union, Iterable
 import attr
 from dill import dumps, loads
 from redis import Redis as RedisGateway
@@ -20,46 +21,45 @@ class Redis(Pattern):
     def connect(self):
         return RedisGateway(host=self.host, port=self.port, db=self.db, password=self.password)
 
-    def get(self, item: Union[Dixel, str], **kwargs):
-
-        # Get needs to accept oid's or items with oid's
+    @classmethod
+    def item2str(cls, item: Union[Dixel, UUID, str]) -> str:
         if type(item) == Dixel:
-            id = item.id
+            id = str( item.uid )
+        elif type(item) == UUID:
+            id = str(item)
         elif type(item) == str:
             id = item
         else:
-            raise ValueError("Can not get type {}!".format(type(item)))
+            raise ValueError("Can not convert type {} to str!".format(type(item)))
+        return id
 
+    def get(self, item: Union[Dixel, UUID, str], **kwargs):
+
+        id = Redis.item2str( item )
         item = loads( self.gateway.get(id) )
         return item
 
-    def remove(self, item: Union[Dixel, str] ):
+    def remove(self, item: Union[Dixel, UUID, str] ):
 
-        if type(item) == Dixel:
-            id = item.id
-        elif type(item) == str:
-            id = item
-        else:
-            raise ValueError("Can not remove type {}!".format(type(item)))
-
+        id = Redis.item2str(item)
         self.gateway.delete(id)
 
-    def put(self, item, **kwargs):
-        self.gateway.set( item.id, dumps(item) )
+    def put(self, item: Dixel):
+        self.gateway.set( Redis.item2str( item ), dumps(item) )
 
-    def sput(self, sid, set):
-        for item in set:
+    def sput(self, sid: str, items: Iterable):
+        for item in items:
             self.sadd(sid, item)
 
-    def sget(self, id):
+    def sget(self, sid: str):
         result = set()
-        for iid in self.gateway.smembers(id):
+        for iid in self.gateway.smembers(sid):
             item = self.get(iid)
             result.add(item)
         return result
 
     def sadd(self, sid, item):
-        self.gateway.sput(id, item.id)
+        self.gateway.sput(sid, Redis.item2str(item))
         self.put(item)
 
     def sremove(self, sid, iid):

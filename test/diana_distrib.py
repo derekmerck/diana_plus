@@ -15,13 +15,13 @@ $ python3 test/diana_distrib.py
 
 import os
 
-os.environ['DIANA_BROKER']="redis://:D1anA!@rad_research:6379/1"
-os.environ['DIANA_RESULT']="redis://:D1anA!@rad_research:6379/2"
-service_cfg = "secrets/lifespan_services.yml"
+# os.environ['DIANA_BROKER']="redis://:D1anA!@rad_research:6379/1"
+# os.environ['DIANA_RESULT']="redis://:D1anA!@rad_research:6379/2"
+# service_cfg = "secrets/lifespan_services.yml"
 
-# os.environ['DIANA_BROKER']="redis://:passw0rd!@192.168.33.10:6379/1"
-# os.environ['DIANA_RESULT']="redis://:passw0rd!@192.168.33.10:6379/2"
-# service_cfg = "test/dev_services.yml"
+os.environ['DIANA_BROKER']="redis://:passw0rd!@192.168.33.10:6379/1"
+os.environ['DIANA_RESULT']="redis://:passw0rd!@192.168.33.10:6379/2"
+service_cfg = "test/dev_services.yml"
 
 import logging, yaml, time
 from pprint import pprint, pformat
@@ -43,7 +43,7 @@ def test_local():
     orthanc = local_apis.Orthanc(**services['orthanc'])
 
     cache.put(d)
-    e = cache.get(d.id)
+    e = cache.get(d.uid)
     assert d == e
 
     # Polymorphic get for DicomFile
@@ -65,7 +65,7 @@ def test_distrib():
     orthanc = star_apis.Orthanc(**services['orthanc'])
 
     cache.put(d).get()
-    e = cache.get(d.id).get()
+    e = cache.get(d.uid).get()
     assert d == e
 
     # Polymorphic get for DicomFile
@@ -133,77 +133,9 @@ if __name__=="__main__":
     with open(service_cfg, "r") as f:
         services = yaml.safe_load(f)
 
-    proxy = local_apis.Orthanc(**services['proxy1'])
-    splunk = local_apis.Splunk(**services['splunk'])
-
-    # for item in proxy.instances:
-    #     print( item.meta )
-
-
-
-
-    q = {"StudyDate": "20180621",
-         "StudyTime": "0800-1000",
-         "StudyDescription": '',
-         "ModalitiesInStudy": "CT"}
-
-    recent = proxy.find(q, DicomLevel.STUDIES, "gepacs")
-
-    if not recent:
-        exit()
-
-    for study in recent:
-
-        desc = "{}: {} at {} ({})".format(study.meta['AccessionNumber'],
-                                     study.meta['StudyDescription'],
-                                     study.meta['StudyTime'],
-                                     study.meta['ModalitiesInStudy'])
-        logging.info(desc)
-
-        q = {"StudyInstanceUID": study.meta["StudyInstanceUID"],
-             "SeriesDescription": '',
-             "Modality": "SR"}
-        series = proxy.find(q, DicomLevel.SERIES, "gepacs")
-
-        if not series:
-            logging.info("  - NO STRUCTURED REPORT")
-            continue
-
-        for s in series:
-            desc = "   - {}".format(s.meta['SeriesDescription'])
-            logging.info(desc)
-
-            q = {"StudyInstanceUID": study.meta["StudyInstanceUID"],
-                 "SeriesInstanceUID": s.meta["SeriesInstanceUID"]}
-
-            ret = proxy.find(q, DicomLevel.SERIES, "gepacs", retrieve=True)
-            d = proxy.get(s.oid(), level=DicomLevel.SERIES)
-            splunk.put(d, "dose_reports", host=proxy.location, hec="diana")
-            proxy.remove(d)
-
-            # instances = proxy.find(q, DicomLevel.INSTANCES, "gepacs")
-            # if not instances:
-            #     continue
-            #
-            # instance = instances.pop()
-            #
-            # logging.warning(instance)
-            #
-            # q = {"StudyInstanceUID": study.meta["StudyInstanceUID"],
-            #      "SeriesInstanceUID": s.meta["SeriesInstanceUID"],
-            #      "SOPInstanceUID": instance.meta["SOPInstanceUID"]}
-            #
-            # proxy.find(q, DicomLevel.INSTANCES, "gepacs", retrieve=True)
-
-            # d = proxy.get( instance.oid(), level=DicomLevel.INSTANCES )
-            #
-            # print(d)
-
-        # exit()
-
-    # test_local()
-    # test_distrib()
-    # test_chaining()
+    test_local()
+    test_distrib()
+    test_chaining()
     # test_splunk()  # Need an assertion in here
 
 

@@ -1,7 +1,7 @@
 # Pattern objects can be instantiated through a factory, however, the factory
 # has to import relevant class types into "globals"
 
-from . import Orthanc, Redis, DicomFile
+from . import Orthanc, Redis, DicomFile, Splunk
 
 
 def factory(**pattern):

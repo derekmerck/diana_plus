@@ -4,6 +4,53 @@ import attr
 from .dixel import Dixel
 from ..utils import DicomLevel, Pattern, gateway
 
+
+@attr.s
+class ReportFile(Pattern):
+    location = attr.ib(default=None)
+    gateway = attr.ib(init=False)
+
+    @gateway.default
+    def connect(self):
+        return gateway.TextFile(location=self.location)
+
+    def put(self, item: Dixel, path: str=None, explode: str=None, anonymize: bool=False) -> Dixel:
+        fn = item.meta['FileName']
+
+        if anonymize:
+            data = item.report.anonymized()
+        else:
+            data = item.report.text
+
+        if os.path.splitext(fn)[-1:] != ".txt":
+            fn = fn + '.txt'
+
+        self.gateway.write(fn, data, path=path, explode=explode )
+        return item
+
+
+@attr.s
+class ImageFile(Pattern):
+    location = attr.ib(default=None)
+    gateway = attr.ib(init=False)
+
+    @gateway.default
+    def connect(self):
+        return gateway.ImageFile(location=self.location)
+
+    def put(self, item: Dixel, path: str = None, explode: str = None) -> Dixel:
+        fn = item.meta['FileName']
+
+        if os.path.splitext(fn)[-1:] != ".png" and \
+                os.path.splitext(fn)[-1:] != ".jpg":
+            fn = fn + '.png'
+
+        data = item.get_pixels()
+
+        self.gateway.write(fn, data, path=path, explode=explode)
+        return item
+
+
 @attr.s
 class DicomFile(Pattern):
     location = attr.ib( default=None )
@@ -21,7 +68,7 @@ class DicomFile(Pattern):
                 os.path.splitext(fn)[-1:] != ".dcm":
             fn = fn + '.dcm'   # Single file
         if item.level > DicomLevel.INSTANCES and \
-            os.path.splitext(fn)[-1:] != ".zip":
+                os.path.splitext(fn)[-1:] != ".zip":
             fn = fn + '.zip'   # Archive format
 
         self.gateway.write(fn, data, path=path, explode=explode )

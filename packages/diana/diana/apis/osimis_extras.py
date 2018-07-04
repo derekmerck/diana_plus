@@ -4,8 +4,9 @@ Derek Merck, Summer 2018
 Method to summarize collections of Osimis-style ROI metadata and
 monkey-patch for diana.apis.Orthanc
 
-Should probably implement this as a subclass of Orthanc that extends "get" with
-"view=annotation".  But patching seemed easier for one-off applications.
+Considered implementing this as an annotation "view" for Orthanc.get,
+but it did not need to return a dixel as I was using it. So monkey-patching
+seemed easier for a one-off application.
 
 >>> from diana.apis import Orthanc, osimis_extras
 >>> o = Orthanc()
