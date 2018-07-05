@@ -6,6 +6,10 @@ group: edge
 python:
   - "3.6"
 
+install:
+
+  - pip3 -e packages/diana packages/guidmint
+
 script:
 
- - export PYTHONPATH="packages/diana:packages/guidmint"; pytest test
+  - pytest test
