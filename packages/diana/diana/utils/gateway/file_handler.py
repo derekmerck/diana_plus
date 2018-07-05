@@ -29,7 +29,8 @@ class FileHandler(object):
     def explode_path(self, fn: str, stride: int, depth: int):
         expath = []
         for i in range(depth):
-            block = fn[(i - 1) * stride:i * stride]
+            block = fn[(i*stride) : (i+1)*stride]
+            # self.logger.debug("Block: {}".format(block))
             expath.append(block)
         return os.path.join(*expath)
 
@@ -67,13 +68,14 @@ class TextFile(FileHandler):
 @attr.s
 class DicomFile(FileHandler):
 
-    def write(self, fn: str, data, path: str=None, explode: Sequence=None):
+    def write(self, fn: str, data, path: str, explode: Sequence=None):
         fp = self.fp(fn, path, explode)
 
-        if not os.path.dirname(fn):
-            os.makedirs(os.path.dirname(fn))
+        if not os.path.isdir( os.path.dirname(fp) ):
+            self.logger.debug("Creating dir tree for {}".format( os.path.dirname(fp) ))
+            os.makedirs(os.path.dirname(fp))
 
-        with open(fp, 'wb') as f:
+        with open(fp, 'wb+') as f:
             f.write(data)
 
     def read(self, fn: str, path: str=None, explode: Sequence=None, pixels: bool=False):

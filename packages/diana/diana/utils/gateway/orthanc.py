@@ -29,10 +29,10 @@ class Orthanc(Requester):
         url = self._url(resource)
         return self._put(url, data=data, auth=self.auth)
 
-    def post(self, resource: str, params=None, data=None, json: Mapping=None, headers: Mapping=None):
+    def post(self, resource: str, data=None, json: Mapping=None, headers: Mapping=None):
         self.logger.debug("Posting {} to orthanc".format(resource))
         url = self._url(resource)
-        return self._post(url, params=params, data=data, json=json, auth=self.auth, headers=headers)
+        return self._post(url, data=data, json=json, auth=self.auth, headers=headers)
 
     def delete(self, resource: str):
         self.logger.debug("Deleting {} from orthanc".format(resource))
@@ -63,7 +63,7 @@ class Orthanc(Requester):
         elif view == "image" and level == DicomLevel.INSTANCES:
             postfix = "preview"  # single dcm
 
-        elif view == "archive" and level > DicomLevel.INSTANCES:
+        elif view == "archive" and level < DicomLevel.INSTANCES:
             postfix = "archive"   # zipped archive
 
         else:
@@ -86,15 +86,15 @@ class Orthanc(Requester):
         resource = "{}/{}".format(level, oid)
         return self.delete(resource)
 
-    def anonymize_item(self, oid: str, level: DicomLevel, replacement_map: Mapping=None):
+    def anonymize_item(self, oid: str, level: DicomLevel, replacement_dict: Mapping=None):
 
         resource = "{}/{}/anonymize".format(level, oid)
 
-        if replacement_map:
-            replacement_json = json.dumps(replacement_map)
-            data = replacement_json
+        if replacement_dict:
+            # replacement_json = json.dumps(replacement_dict)
+            # data = replacement_json
             headers = {'content-type': 'application/json'}
-            return self.post(resource, data=data, headers=headers)
+            return self.post(resource, json=replacement_dict, headers=headers)
 
         return self.post(resource)
 
@@ -134,8 +134,8 @@ class Orthanc(Requester):
                 resource = 'queries/{}/answers/{}/retrieve'.format(qid, aid)
                 headers = {'content-type': 'application/text'}
                 rr = self.post(resource, data=retrieve_dest, headers=headers)
-                self.logger.debug(retrieve_dest)
-                self.logger.debug(rr)
+                # self.logger.debug(retrieve_dest)
+                # self.logger.debug(rr)
 
         # Returns an array of answers
         return ret

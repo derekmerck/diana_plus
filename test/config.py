@@ -32,7 +32,7 @@ def set_services():
 # --------------------------
 
 logging_level = logging.DEBUG
-service_func = dev
+service_func = prod
 test_star = True
 
 services = set_services()

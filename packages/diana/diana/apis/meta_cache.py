@@ -4,8 +4,10 @@ Reads dixel meta and reports from or writes to a csv file
 
 from csv import DictReader, DictWriter
 from typing import Union, Mapping
+from dateutil import parser as dtparser
 import attr
 from diana.utils import Pattern, DicomLevel
+from diana.utils.smart_encode import stringify
 from .dixel import Dixel
 
 
@@ -14,10 +16,24 @@ from .dixel import Dixel
 class MetaCache(Pattern):
     location = attr.ib( default=None )
     cache = attr.ib( init=False, factory=dict )
-    fieldnames = attr.ib( init=False, default=[] )
+    key_field = attr.ib( default="AccessionNumber" )
 
     montage_keymap = {
         "Accession Number": "AccessionNumber",
+        "Patient MRN": "PatientID",
+        "Patient First Name": 'PatientFirstName',
+        "Patient Last Name": 'PatientLastName',
+
+        'Patient Sex': 'PatientSex',
+        'Patient Age': 'PatientAge',
+
+        'Exam Completed Date': "StudyDate",
+        'Organization': 'Organization',
+        "Exam Code": "OrderCode",
+        'Exam Description': 'StudyDescription',
+        "Patient Status": "PatientStatus",
+        'Ordered By': 'ReferringPhysicianName',
+
         "Report Text": "_report"
     }
 
@@ -25,22 +41,19 @@ class MetaCache(Pattern):
 
         # Get needs to accept oid's or items with oid's
         if type(item) == Dixel:
-            id = item.id
+            id = item.uid
         elif type(item) == str:
             id = item
         else:
             raise ValueError("Can not get type {}!".format(type(item)))
 
         meta = self.cache.get( id )
-        level = meta["_level"]
-        del(meta["_level"])
+        # self.logger.debug(meta)
+        level  = DicomLevel.of( meta.get("_level" ) )
+        report = meta.get('_report')
+        uid    = meta.get('_uid')
 
-        if meta.get('_report'):
-            report = meta['report']
-        else:
-            report = None
-
-        item = Dixel( id=id, meta=meta, level=level, report=report )
+        item = Dixel( uid=uid, meta=meta, level=level, report=report )
         return item
 
     def remove(self, item: Union[Dixel, str] ):
@@ -60,45 +73,66 @@ class MetaCache(Pattern):
         meta['_level'] = item.level
         if item.report:
             meta['_report'] = item.report
-        self.cache[item.id] = meta
+        self.cache[meta[self.key_field]] = meta
 
-    def load(self, key_field="AccessionNumber", level=DicomLevel.STUDIES, keymap: Mapping=None):
+    def load(self, fp: str=None, level=DicomLevel.STUDIES, keymap: Mapping=None):
+        self.logger.debug("loading")
+        fp = fp or self.location
 
         def remap_keys(item):
-            for k,v in keymap:
-                if item.get(k):
-                    item[v] = item[k]
-                    del( item[k] )
-            return item
+            ret = {}
+            # Only take kv's that are in the remapper
+            for k, v in keymap.items():
+                vv = item.get(k)
+                if vv:
+                    ret[v] = vv
+            return ret
 
-        def remap_fields(fieldnames):
-            return [keymap.get(f) or f for f in fieldnames]
-
-        with open(self.location) as f:
+        with open(fp) as f:
             reader = DictReader(f)
-            self.fieldnames = remap_fields( reader.fieldnames )
 
             for item in reader:
-                key = item[key_field]
+                if keymap:
+                    item = remap_keys(item)
                 if not item.get("_level"):
                     item["_level"] = level
 
-                self.cache[key] = remap_keys(item)
+                for k,v in item.items():
+                    # if this k is a "date", normalize it
+                    if k.lower().find("date") >= 0 or \
+                            k.lower().find("dob") >= 0:
+                        item[k] = dtparser.parse(v)
+
+
+                # print(item)
+
+                self.cache[item[self.key_field]] = item
 
     def dump(self, fp=None, fieldnames=None):
+        self.logger.debug("dumping")
         fp = fp or self.location
-        fieldnames = fieldnames or self.fieldnames
-        if "_level" not in fieldnames:
-            fieldnames.append("_level")
+        fieldnames = fieldnames or \
+                     self.cache.values().__iter__().__next__().keys()
+
+        # print(fieldnames)
 
         with open(fp, "w") as f:
-            writer = DictWriter(f, fieldnames=fieldnames)
+            writer = DictWriter(f, fieldnames)
             writer.writeheader()
-            writer.writerows(self.cache)
+            for k, v in self.cache.items():
+                for kk, vv in v.items():
+                    out = stringify(vv)
+                    if out:
+                        v[kk] = out
+
+                writer.writerow(v)
 
     def __iter__(self):
-        self.iterator = self.cache.keys()
+        # self.logger.debug("Setting iterator = cache.keys()")
+        self.iterator = iter(self.cache.keys())
+        return self
 
     def __next__(self):
-        yield self.get(next(self.iterator))
+        # self.logger.debug("Getting")
+        return self.get(next(self.iterator))
 

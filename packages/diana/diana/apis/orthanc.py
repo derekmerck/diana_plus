@@ -1,10 +1,23 @@
 # DICOM node or proxy
 
+import datetime
 from typing import Mapping, Callable, Union
 import attr
-from diana.utils import DicomLevel, Pattern, gateway, dicom_clean_tags
+from diana.utils import DicomLevel, Pattern, gateway, dicom_clean_tags, dicom_strfdate
 from .dixel import Dixel
 
+
+def simple_sham_map(meta):
+    return {
+        'Replace': {
+            'PatientName': meta['ShamName'],
+            'PatientID': meta['ShamID'],
+            'PatientBirthDate': dicom_strfdate( meta['ShamDoB'] ) if isinstance(meta["ShamDoB"], datetime.date) else meta["ShamDoB"],
+            'AccessionNumber': meta['ShamAccession'].hexdigest() if hasattr( meta["ShamAccession"], "hexdigest") else meta["ShamAccession"],
+        },
+        'Keep': ['PatientSex', 'StudyDescription', 'SeriesDescription'],
+        'Force': True
+    }
 
 @attr.s
 class Orthanc(Pattern):
@@ -35,8 +48,10 @@ class Orthanc(Pattern):
         if type(item) == Dixel:
             oid = item.oid()
             level = item.level
+            meta = item.meta
         elif type(item) == str:
             oid = item
+            meta = {'oid': oid}
         else:
             raise ValueError("Can not get type {}!".format(type(item)))
 
@@ -57,9 +72,10 @@ class Orthanc(Pattern):
             result = dicom_clean_tags(result)
             item = Dixel(meta=result, level=level)
             return item
-        elif view == "file":
-            # We can assemble a dixel
-            item = Dixel(meta={'oid': oid}, file=result, level=level)
+        elif view == "file" or \
+             view == "archive":
+            # We can assemble a dixel with a file
+            item = Dixel(meta=meta, file=result, level=level)
             return item
         else:
             # Return the meta info or binary data
@@ -83,12 +99,13 @@ class Orthanc(Pattern):
 
     # Handlers
 
-    def anonymize(self, item: Dixel, replacement_map: Callable[[dict],dict]=None, remove: bool=False) -> Dixel:
+    def anonymize(self, item: Dixel, replacement_map: Callable[[dict],dict]=simple_sham_map, remove: bool=False) -> Dixel:
         replacement_dict = replacement_map(item.meta)
-        result = self.gateway.anonymize(item.oid, item.level, replacement_dict=replacement_dict)
+        result = self.gateway.anonymize_item(item.oid(), item.level, replacement_dict=replacement_dict)
         if remove:
             self.remove(item)
-        return self.get( result['id'], level=item.level )
+        # self.logger.debug(result)
+        return self.get( result['ID'], level=item.level )
 
     def remove(self, item: Dixel):
         oid = item.oid()
@@ -142,8 +159,14 @@ class Orthanc(Pattern):
             return q
 
         q = find_item_query(item)
+        # self.logger.debug(q)
 
-        return self.find(q, domain, retrieve=retrieve)
+        result = self.find(q, item.level, domain, retrieve=retrieve)
+
+        if result:
+            # self.logger.debug(result)
+            return item.update(result.pop())
+
 
     def find(self, q: Mapping, level: DicomLevel, domain: str, retrieve: bool=False):
 

@@ -149,3 +149,12 @@
       state: started
       restart: yes
 
+- name:  Create diana service manifest
+  hosts: localhost
+  tasks:
+
+  - name: Create service manifest
+    local_action:
+      template:
+        src:  service_manifest.yml.j2
+        dest: /test/service_manifest.yml

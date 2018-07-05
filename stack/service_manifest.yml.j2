@@ -1,0 +1,19 @@
+orthanc:
+  host: {{ docker_bridge }}
+  port: 8042
+  user: orthanc
+  password: {{ dicom_password }}
+
+redis:
+  host: {{ docker_bridge }}
+  port: 6379
+  password: {{ broker_password }}
+
+splunk:
+  host: {{ docker_bridge }}
+  port: 8089
+  user: admin
+  password: {{ index_password }}
+  hec_port: 8088
+  hec_tokens:
+    diana: {{ diana_hec }}

@@ -2,6 +2,8 @@ import logging
 import requests
 import attr
 from typing import Mapping
+import json as json_handler
+from ..smart_encode import SmartJSONEncoder
 
 # Diana-agnostic HTTP Gateways
 
@@ -45,8 +47,13 @@ class Requester(object):
         r = requests.put(url, data=data, headers=headers, auth=auth, verify=False)
         return self._return(r)
 
-    def _post(self, url: str, params: Mapping=None, data=None, json: Mapping=None, headers: Mapping=None, auth=None):
-        r = requests.post(url, params=params, data=data, json=json, headers=headers, auth=auth, verify=False)
+    def _post(self, url: str, data=None, json: Mapping=None, headers: Mapping=None, auth=None):
+
+        # Pre-encode dictionaries as json to handle timestamps and hashes, requests won't do this gracefully
+        if json:
+            data = json_handler.dumps(json, cls=SmartJSONEncoder)
+
+        r = requests.post(url, data=data, headers=headers, auth=auth, verify=False)
         return self._return(r)
 
     def _delete(self, url: str, headers: Mapping=None, auth=None):

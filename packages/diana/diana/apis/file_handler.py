@@ -1,5 +1,5 @@
 import os
-from typing import Union
+from typing import Union, Sequence
 import attr
 from .dixel import Dixel
 from ..utils import DicomLevel, Pattern, gateway
@@ -60,14 +60,24 @@ class DicomFile(Pattern):
     def connect(self):
         return gateway.DicomFile(location=self.location)
 
-    def put(self, item: Dixel, path: str=None, explode: str=None) -> Dixel:
+    def check(self, fn: str, path: str=None, explode: Sequence=None) -> bool:
+        if not path:
+            path = self.location
+        fp = self.gateway.fp(fn, path, explode)
+        return os.path.isfile(fp)
+
+    def put(self, item: Dixel, path: str=None, explode: Sequence=None) -> Dixel:
         fn = item.meta['FileName']
-        data = item.data
+        data = item.file
+        if not path:
+            path = self.location
+
+        # self.logger.debug("path: {}".format(path))
 
         if item.level == DicomLevel.INSTANCES and \
                 os.path.splitext(fn)[-1:] != ".dcm":
             fn = fn + '.dcm'   # Single file
-        if item.level > DicomLevel.INSTANCES and \
+        if item.level < DicomLevel.INSTANCES and \
                 os.path.splitext(fn)[-1:] != ".zip":
             fn = fn + '.zip'   # Archive format
 

@@ -5,11 +5,21 @@ from enum import Enum
 from hashlib import sha1
 from datetime import datetime
 
+logger = logging.getLogger(__name__)
+
 class DicomLevel(Enum):
     PATIENTS  = 0
     STUDIES   = 1
     SERIES    = 2
     INSTANCES = 3
+
+    # Provides a partial ordering so they are comparable
+    # Note that Study < Instance under this order
+    def __lt__(self, other):
+        if self.__class__ is other.__class__:
+            # logging.debug("{}<{}".format(self.value, other.value))
+            return self.value < other.value
+        return NotImplemented
 
     @classmethod
     def of(cls, value: str):
@@ -50,6 +60,11 @@ def orthanc_id(PatientID, StudyInstanceUID, SeriesInstanceUID=None, SOPInstanceU
 
 def dicom_strptime( dts: str ) -> datetime:
 
+    if not dts:
+        logger.error("Failed to parse empty date time string")
+        ts = datetime.now()
+        return ts
+
     try:
         # GE Scanner dt format
         ts = datetime.strptime( dts , "%Y%m%d%H%M%S")
@@ -66,13 +81,17 @@ def dicom_strptime( dts: str ) -> datetime:
         # Wrong format
         pass
 
-    logging.error("Can't parse date time string: {0}".format( dts ))
+    logger.error("Failed to parse date time string: {0}".format( dts ))
     ts = datetime.now()
     return ts
 
 
 def dicom_strftime( dt: datetime ) -> str:
     return dt.strftime( "%Y%m%d%H%M%S" )
+
+
+def dicom_strfdate( dt: datetime ) -> str:
+    return dt.strftime( "%Y%m%d" )
 
 
 def dicom_strftime2( dt: datetime ) -> (str, str):
