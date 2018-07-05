@@ -1,5 +1,5 @@
 __name__="guidmint"
+__version__ = "0.12.0"
 
-from .mint import __version__
 from .md5mint import MD5Mint
 from .pseudomint import PseudoMint
