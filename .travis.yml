@@ -8,7 +8,7 @@ python:
 
 install:
 
-  - pip3 -e packages/diana packages/guidmint
+  - pip3 install -e packages/diana packages/guidmint
 
 script:
 
