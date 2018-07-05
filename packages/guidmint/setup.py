@@ -1,14 +1,19 @@
-import setuptools
-from guidmint import __version__
+import setuptools, re
 
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
+with open("guidmint/__init__.py") as f:
+    content = f.read()
+    match = re.findall(r"__([a-z0-9_]+)__\s*=\s*\"([^\"]+)\"", content)
+    print(match)
+    metadata = dict(match)
+
 setuptools.setup(
-    name="guidmint",
-    version=__version__,
-    author="Derek Merck",
-    author_email="derek_merck@brown.edu",
+    name=metadata.get("name"),
+    version=metadata.get("version"),
+    author=metadata.get("author"),
+    author_email=metadata.get("author_email"),
     description="Global unique ID and pseudonym generator",
     long_description=long_description,
     long_description_content_type="text/markdown",

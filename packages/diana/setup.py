@@ -1,16 +1,22 @@
-import setuptools
+import setuptools, re
 
-with open("README.md", "r") as fh:
-    long_description = fh.read()
+with open("README.md") as f:
+    long_description = f.read()
 
-with open("requirements.txt", "r") as fh:
-    reqs = fh.read().splitlines()
+with open("requirements.txt") as f:
+    reqs = f.read().splitlines()
+
+with open("diana/__init__.py") as f:
+    content = f.read()
+    match = re.findall(r"__([a-z0-9_]+)__\s*=\s*\"([^\"]+)\"", content)
+    print(match)
+    metadata = dict(match)
 
 setuptools.setup(
-    name="diana-star",
-    version="0.3.0",
-    author="Derek Merck",
-    author_email="derek_merck@brown.edu",
+    name=metadata.get("name"),
+    version=metadata.get("version"),
+    author=metadata.get("author"),
+    author_email=metadata.get("author_email"),
     description="DICOM analysis and archive core",
     long_description=long_description,
     long_description_content_type="text/markdown",
