@@ -1,6 +1,6 @@
 attrs
 celery
-dateutils
+dateutil
 dill
 pydicom
 requests
