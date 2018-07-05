@@ -22,5 +22,5 @@ setuptools.setup(
         "Operating System :: OS Independent",
     ),
     license='MIT',
-    install_requires=['dateutil']
+    install_requires=['python-dateutil']
 )
