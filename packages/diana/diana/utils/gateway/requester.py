@@ -14,6 +14,11 @@ class Requester(object):
     auth = attr.ib(init=False, default=None)
     path = attr.ib(default=None)
     protocol = attr.ib(default="http")
+    logger = attr.ib(init=False)
+
+    @logger.default
+    def get_logger(self):
+        return logging.getLogger(__name__)
 
     def _url(self, resource: str=''):
         if self.path:
@@ -23,7 +28,7 @@ class Requester(object):
 
     def _return(self, response: requests.Response):
         if response.status_code < 200 or response.status_code > 299:
-            logging.error(response)
+            self.logger.error(response)
             raise requests.ConnectionError( response )
 
         elif response.headers.get('content-type').find('application/json') >= 0:

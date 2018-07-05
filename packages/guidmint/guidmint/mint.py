@@ -79,36 +79,3 @@ class GUIDMint(object):
         return (dob+rd).date()
 
 
-
-def test_mints():
-
-    md5_mint = MD5Mint()
-    pseudo_mint = PseudoMint()
-
-    name = "MERCK^DEREK^L"
-    gender = "M"
-    dob = "1971-06-06"
-
-    id = md5_mint.pseudo_identity(name, gender=gender, dob=dob)
-    assert(id==('392ec5209964bfad', '392ec5209964bfad', '1971-08-23'))
-    id = pseudo_mint.pseudo_identity(name, gender=gender, dob=dob)
-    assert(id==(u'BIN4K4VMOBPAWTW5', u'BERTOZZI^ISIDRO^N', '1971-06-22'))
-
-    name = "MERCK^LISA^H"
-    gender = "F"
-    dob = "1973-01-01"
-
-    id = md5_mint.pseudo_identity(name, gender=gender, dob=dob)
-    assert(id==('2951550cc186aae1', '2951550cc186aae1', '1972-09-03'))
-    id = pseudo_mint.pseudo_identity(name, gender=gender, dob=dob)
-    assert(id==(u'LSEOMWPHUXQTPSN3', u'LIZARDO^SUMMER^E', '1972-10-22'))
-
-    name = "PROTECT3-SU001"
-    age = 65
-
-    id = md5_mint.pseudo_identity(name, age=age)
-    assert(id==('c3352e0d6de56475', 'c3352e0d6de56475', '1966-09-24'))
-    id = pseudo_mint.pseudo_identity(name, age=age)
-    assert(id==(u'KGHZ7YTCPDDAXG2N', u'KUNZMAN^GENIE^H', '1952-11-11'))
-
-

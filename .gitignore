@@ -2,9 +2,13 @@
 *.iml
 secrets/*
 *.retry
+.coverage
+.coverage_html
+.pytest_cache
 
 .vagrant/*
 ignore/*
+
 
 __pycache__/
 build/

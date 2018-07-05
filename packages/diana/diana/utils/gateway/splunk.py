@@ -30,22 +30,22 @@ class Splunk(Requester):
     # Wrapper for requester calls
 
     def get(self, resource: str, params=None):
-        logging.debug("Getting {} from splunk".format(resource))
+        self.logger.debug("Getting {} from splunk".format(resource))
         url = self._url(resource)
         return self._get(url, params=params, auth=self.auth)
 
     def put(self, resource: str, data=None):
-        logging.debug("Putting {} into splunk".format(resource))
+        self.logger.debug("Putting {} into splunk".format(resource))
         url = self._url(resource)
         return self._put(url, data=data, auth=self.auth)
 
     def post(self, resource: str, params=None, data=None, json: Mapping=None, headers: Mapping=None):
         url = self._url(resource)
-        logging.debug("Posting {} to splunk".format(url))
+        self.logger.debug("Posting {} to splunk".format(url))
         return self._post(url, params=params, data=data, json=json, auth=self.auth, headers=headers)
 
     def delete(self, resource: str):
-        logging.debug("Deleting {} from splunk".format(resource))
+        self.logger.debug("Deleting {} from splunk".format(resource))
         url = self._url(resource)
         return self._delete(url, auth=self.auth)
 
@@ -59,7 +59,7 @@ class Splunk(Requester):
             earliest = (timerange.earliest - timedelta(minutes=2)).isoformat()
             latest = (timerange.latest + timedelta(minutes=2)).isoformat()
 
-        # logging.debug("Earliest: {}\n           Latest:   {}".format(earliest, latest))
+        # self.logger.debug("Earliest: {}\n           Latest:   {}".format(earliest, latest))
 
         response = self.post('services/search/jobs',
 
@@ -70,8 +70,8 @@ class Splunk(Requester):
         soup = BeautifulSoup(response, 'xml')  # Should have returned xml
         sid = soup.find('sid').string  # If it returns multiple sids, it didn't parse the request and did a "GET"
 
-        # logging.debug(pformat(soup))
-        logging.debug(sid)
+        # self.logger.debug(pformat(soup))
+        self.logger.debug(sid)
 
         def poll_until_done(sid):
             isDone = False
@@ -82,12 +82,12 @@ class Splunk(Requester):
                 response = self.get('services/search/jobs/{0}'.format(sid),
                                     params={'output_mode': 'json'})
 
-                # logging.debug(response)
+                # self.logger.debug(response)
 
                 isDone = response['entry'][0]['content']['isDone']
                 status = response['entry'][0]['content']['dispatchState']
                 if i % 5 == 1:
-                    logging.debug('Waiting to finish {0} ({1})'.format(i, status))
+                    self.logger.debug('Waiting to finish {0} ({1})'.format(i, status))
             return response['entry'][0]['content']['resultCount']
 
         n = poll_until_done(sid)
@@ -108,7 +108,7 @@ class Splunk(Requester):
                     data = json.loads(r['_raw'])
                     result.append( data )
                 except (json.decoder.JSONDecodeError, KeyError):
-                    logging.warning("Skipping non-json string: {}".format(pformat(r)))
+                    self.logger.warning("Skipping non-json string: {}".format(pformat(r)))
             i = i+1
 
         return result
@@ -144,7 +144,7 @@ class Splunk(Requester):
                     format(self.hec_protocol, self.host, self.hec_port)
 
         url = _hec_url()
-        logging.debug("Posting to splunk hec")
+        self.logger.debug("Posting to splunk hec")
 
         headers = {'Authorization': 'Splunk {0}'.format(token)}
         return self._post(url, json=data, headers=headers)

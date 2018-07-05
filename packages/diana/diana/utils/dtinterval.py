@@ -133,42 +133,42 @@ class DatetimeInterval(object):
 
 def test_timerange():
 
-    TR = TimeInterval("now", "+4h")
+    TR = DatetimeInterval("now", "+4h")
     print(TR)
 
-    TR = TimeInterval("June 2, 2017", end="June 14, 2019")
+    TR = DatetimeInterval("June 2, 2017", end="June 14, 2019")
     print(TR)
 
-    TR = TimeInterval(incr="-3h")
+    TR = DatetimeInterval(incr="-3h")
     print(TR)
 
     print(TR.as_dicom())
 
-    TR = TimeInterval("20180603120000", "+3h")
+    TR = DatetimeInterval("20180603120000", "+3h")
     print(TR)
 
-    TR = TimeInterval("12pm", incr="-4h")
+    TR = DatetimeInterval("12pm", incr="-4h")
 
     for i in range(5):
         TR.next()
         print(TR)
 
-    TR = TimeInterval("now", end="5pm")
+    TR = DatetimeInterval("now", end="5pm")
     print(TR)
     TR.next()
     print(TR)
-    W = TimeInterval(incr="1h")
+    W = DatetimeInterval(incr="1h")
 
     for i in range(15):
         W.next()
         print(W.as_dicom2())
 
 
+logger = logging.getLogger(__name__)
 
 
 if __name__ == "__main__":
 
     logging.basicConfig(level=logging.DEBUG)
-
     test_timerange()
 

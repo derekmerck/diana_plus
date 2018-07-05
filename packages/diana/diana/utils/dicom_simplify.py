@@ -8,7 +8,7 @@ Prepare a DICOM tag set for ingestion into splunk:
 
 """
 
-import logging, json
+import logging, json, os
 from pprint import pprint, pformat
 from .smart_encode import SmartJSONEncoder
 from .dicom import dicom_strptime
@@ -53,7 +53,7 @@ def parse_timestamps(tags):
         elif tags.get('ObservationDateTime'):
             tags['InstanceCreationDateTime'] = tags['ObservationDateTime']
         else:
-            logging.warning('No creation date could be parsed from instance, series, study, or observation.')
+            logger.warning('No creation date could be parsed from instance, series, study, or observation.')
             pass
 
     return tags
@@ -69,10 +69,10 @@ def normalize_ctdi_vol(tags):
         for exposure in exposures:
 
             if "CT Dose" not in exposure:
-                logging.debug("Normalizing missing CT Dose key")
+                logger.debug("Normalizing missing CT Dose key")
                 exposure["CT Dose"] = {'Mean CTDIvol': 0}
             else:
-                # logging.debug("CT Dose key already exists!")
+                # logger.debug("CT Dose key already exists!")
                 pass
 
     except:
@@ -91,7 +91,7 @@ def normalize_station_name(tags):
                 tags["StationName"] = tags["X-Ray Radiation Dose Report"]["Device Observer UID"]
             except:
                 tags["StationName"] = "Unknown"
-                logging.debug('No station name identifed')
+                logger.debug('No station name identifed')
 
     return tags
 
@@ -102,57 +102,57 @@ def simplify_content_sequence(tags):
 
     for item in tags["ContentSequence"]:
 
-        # logging.debug('Item = ' + pformat(item))
+        # logger.debug('Item = ' + pformat(item))
 
         try:
             key = item['ConceptNameCodeSequence'][0]['CodeMeaning']
             type_ = item['ValueType']
             value = None
         except KeyError:
-            logging.debug('No key or no type, returning')
+            logger.debug('No key or no type, returning')
             return
 
         if type_ == "TEXT":
             value = item['TextValue']
-            # logging.debug('Found text value')
+            # logger.debug('Found text value')
 
         elif type_ == "IMAGE":
             # "IMAGE" sometimes encodes a text UUID, sometimes a refsop
             try:
                 value = item['TextValue']
             except KeyError:
-                logging.debug('No text value for "IMAGE", returning')
+                logger.debug('No text value for "IMAGE", returning')
                 return
 
         elif type_ == "NUM":
             value = float(item['MeasuredValueSequence'][0]['NumericValue'])
-            # logging.debug('Found numeric value')
+            # logger.debug('Found numeric value')
         elif type_ == 'UIDREF':
             value = item['UID']
-            # logging.debug('Found uid value')
+            # logger.debug('Found uid value')
         elif type_ == 'DATETIME':
             value = dicom_strptime(item['DateTime'])
-            # logging.debug('Found date/time value')
+            # logger.debug('Found date/time value')
         elif type_ == 'CODE':
             try:
                 value = item['ConceptCodeSequence'][0]['CodeMeaning']
             except:
                 value = "UNKNOWN"
-            # logging.debug('Found coded value')
+            # logger.debug('Found coded value')
         elif type_ == "CONTAINER":
             value = simplify_content_sequence(item)
-            # logging.debug('Found container - recursing')
+            # logger.debug('Found container - recursing')
         else:
-            logging.debug("Unknown ValueType (" + item['ValueType'] + ")")
+            logger.debug("Unknown ValueType (" + item['ValueType'] + ")")
 
         if data.get(key):
-            # logging.debug('Key already exists (' + key + ')')
+            # logger.debug('Key already exists (' + key + ')')
             if isinstance(data.get(key), list):
                 value = data[key] + [value]
-                # logging.debug('Already a list, so appending')
+                # logger.debug('Already a list, so appending')
             else:
                 value = [data[key], value]
-                # logging.debug('Creating a list from previous and current')
+                # logger.debug('Creating a list from previous and current')
 
         data[key] = value
 
@@ -193,27 +193,42 @@ def dicom_clean_tags(tags):
     # Deal with unnamed stations
     tags = normalize_station_name(tags)
 
-    # logging.info(pformat(tags))
+    # logger.info(pformat(tags))
 
     return tags
 
 def test_simplify():
 
-    items = ["or-dose-tags"]
+    dir = "test/resources"
+    items = ["anon_dose"]
 
     for item in items:
 
-        with open('/Users/derek/Desktop/{0}.json'.format(item)) as f:
+        fn = "{}.json".format(item)
+        fp = os.path.join(dir, fn)
+
+        with open(fp) as f:
             tags = json.load(f)
 
         tags = dicom_clean_tags(tags)
 
-        with open('/Users/derek/Desktop/{0}-simple.json'.format(item), 'w') as f:
-            json.dump(tags, f, indent=3, cls=SmartJSONEncoder, sort_keys=True)
+        # Have to compare in dumped space b/c loader doesn't convert times back into times
+        tag_str = json.dumps(tags, indent=3, cls=SmartJSONEncoder, sort_keys=True)
 
+        fn = "{}.simple.json".format(item)
+        fp = os.path.join(dir, fn)
+
+        with open(fp) as f:
+            simple_str = f.read()
+
+        # print(tag_str)
+        # print(simple_str)
+
+        assert tag_str == simple_str
+
+logger = logging.getLogger(__name__)
 
 if __name__ == "__main__":
 
     logging.basicConfig(level=logging.DEBUG)
-
     test_simplify()

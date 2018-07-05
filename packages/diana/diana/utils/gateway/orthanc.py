@@ -20,22 +20,22 @@ class Orthanc(Requester):
     # Wrapper for requester calls
 
     def get(self, resource: str, params=None):
-        logging.debug("Getting {} from orthanc".format(resource))
+        self.logger.debug("Getting {} from orthanc".format(resource))
         url = self._url(resource)
         return self._get(url, params=params, auth=self.auth)
 
     def put(self, resource: str, data=None):
-        logging.debug("Putting {} into orthanc".format(resource))
+        self.logger.debug("Putting {} into orthanc".format(resource))
         url = self._url(resource)
         return self._put(url, data=data, auth=self.auth)
 
     def post(self, resource: str, params=None, data=None, json: Mapping=None, headers: Mapping=None):
-        logging.debug("Posting {} to orthanc".format(resource))
+        self.logger.debug("Posting {} to orthanc".format(resource))
         url = self._url(resource)
         return self._post(url, params=params, data=data, json=json, auth=self.auth, headers=headers)
 
     def delete(self, resource: str):
-        logging.debug("Deleting {} from orthanc".format(resource))
+        self.logger.debug("Deleting {} from orthanc".format(resource))
         url = self._url(resource)
         return self._delete(url, auth=self.auth)
 
@@ -67,7 +67,7 @@ class Orthanc(Requester):
             postfix = "archive"   # zipped archive
 
         else:
-            logging.error("Unsupported get view format {} for {}".format(view, level))
+            self.logger.error("Unsupported get view format {} for {}".format(view, level))
             return
 
         if postfix:
@@ -107,7 +107,7 @@ class Orthanc(Requester):
         r = self.post(resource, json=query, headers=headers)
 
         if not r:
-            logging.warning("No reply from orthanc remote lookup")
+            self.logger.warning("No reply from orthanc remote lookup")
             return
 
         qid = r["ID"]
@@ -116,7 +116,7 @@ class Orthanc(Requester):
         r = self.get(resource)
 
         if not r:
-            logging.warning("No answers from orthanc lookup")
+            self.logger.warning("No answers from orthanc lookup")
             return
 
         answers = r
@@ -125,7 +125,7 @@ class Orthanc(Requester):
             resource = 'queries/{}/answers/{}/content?simplify'.format(qid, aid)
             r = self.get(resource)
             if not r:
-                logging.warning("Bad answer from orthanc lookup")
+                self.logger.warning("Bad answer from orthanc lookup")
                 return
             ret.append(r)
 
@@ -134,8 +134,8 @@ class Orthanc(Requester):
                 resource = 'queries/{}/answers/{}/retrieve'.format(qid, aid)
                 headers = {'content-type': 'application/text'}
                 rr = self.post(resource, data=retrieve_dest, headers=headers)
-                logging.debug(retrieve_dest)
-                logging.debug(rr)
+                self.logger.debug(retrieve_dest)
+                self.logger.debug(rr)
 
         # Returns an array of answers
         return ret

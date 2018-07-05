@@ -30,7 +30,7 @@ class Redis(Pattern):
         elif type(item) == str:
             id = item
         else:
-            raise ValueError("Can not convert type {} to str!".format(type(item)))
+            raise ValueError("Can not convert type {} to key str!".format(type(item)))
         return id
 
     def get(self, item: Union[Dixel, UUID, str], **kwargs):
@@ -44,8 +44,11 @@ class Redis(Pattern):
         id = Redis.item2str(item)
         self.gateway.delete(id)
 
-    def put(self, item: Dixel):
-        self.gateway.set( Redis.item2str( item ), dumps(item) )
+    def put(self, item: Dixel) -> Dixel:
+
+        id = Redis.item2str(item)
+        self.gateway.set( id, dumps(item) )
+        return item
 
     def sput(self, sid: str, items: Iterable):
         for item in items:

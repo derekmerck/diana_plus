@@ -10,6 +10,11 @@ from PIL.Image import fromarray
 @attr.s
 class FileHandler(object):
     location = attr.ib(default="")
+    logger = attr.ib(init=False)
+
+    @logger.default
+    def get_logger(self):
+        return logging.getLogger(__name__)
 
     def fp(self, fn: str, path: str=None, explode: Sequence=None):
         partial = self.location
@@ -74,7 +79,7 @@ class DicomFile(FileHandler):
     def read(self, fn: str, path: str=None, explode: Sequence=None, pixels: bool=False):
         fp = self.fp(fn, path, explode)
 
-        logging.warning(fp)
+        self.logger.warning(fp)
 
         def is_dicom(fp):
             try:
@@ -83,12 +88,12 @@ class DicomFile(FileHandler):
                     header = f.read(4)
                     magic = binascii.hexlify(header)
                     if magic == b"4449434d":
-                        # logging.debug("{} is dcm".format(fp))
+                        # self.logger.debug("{} is dcm".format(fp))
                         return True
             except:
                 pass
 
-            # logging.debug("{} is NOT dcm".format(fp))
+            self.logger.error("{} is NOT dcm".format(fp))
             return False
 
         if not is_dicom(fp):

@@ -1,0 +1,52 @@
+dist: trusty
+language: python
+group: edge
+
+python:
+  - "3.6"
+services:
+  - docker
+
+addons:
+  apt:
+    packages:
+      - docker-ce
+
+env:
+  matrix:
+    - ARCH_TAG="amd64"  RESIN_ARCH="intel-nuc"    TINI_BIN="tini"       SERVICE="diana-worker"
+    - ARCH_TAG="armv7l" RESIN_ARCH="raspberrypi3" TINI_BIN="tini-armhf" SERVICE="diana-worker"
+
+# Not relevant until new version of orthanc is released
+#    - ARCH_TAG="amd64"  RESIN_ARCH="intel-nuc"    TINI_BIN="tini"       SERVICE="orthanc"
+# This takes too long
+#    - ARCH_TAG="armv7l" RESIN_ARCH="raspberrypi3" TINI_BIN="tini-armhf" SERVICE="orthanc"
+
+before_install:
+
+  # Put docker into "experimental" for manifest function
+  - mkdir -p $HOME/.docker
+  - echo '{"experimental":"enabled"}' > "$HOME/.docker/config.json"
+
+  # Register qemu as cross-compiler
+  - docker run --rm --privileged multiarch/qemu-user-static:register --reset
+
+  - docker build -t "$DOCKER_USERNAME/$SERVICE:$ARCH_TAG" --build-arg "RESIN_ARCH=$RESIN_ARCH" --build-arg "TINI_BIN=$TINI_BIN" docker/$SERVICE
+
+  # Login to docker for push
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+
+  - docker push "$DOCKER_USERNAME/$SERVICE:$ARCH_TAG"
+
+
+script: true
+
+  - export PYTHONPATH="packages/diana:packages/guidmint"; pytest test
+
+
+
+after_script: true
+
+  # Manifest and push
+
+

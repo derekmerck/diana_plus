@@ -5,6 +5,11 @@ import attr
 @attr.s(cmp=False, hash=None)
 class Pattern(object):
     uid = attr.ib(factory=uuid.uuid4)
+    logger = attr.ib(init=False)
+
+    @logger.default
+    def get_logger(self):
+        return logging.getLogger(__name__)
 
     def __hash__(self):
         return hash(self.uid)

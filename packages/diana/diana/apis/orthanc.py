@@ -1,7 +1,6 @@
 # DICOM node or proxy
 
-import logging
-from typing import Mapping, Sequence, Callable, Union
+from typing import Mapping, Callable, Union
 import attr
 from diana.utils import DicomLevel, Pattern, gateway, dicom_clean_tags
 from .dixel import Dixel
@@ -41,12 +40,10 @@ class Orthanc(Pattern):
         else:
             raise ValueError("Can not get type {}!".format(type(item)))
 
-        logging.debug("{}: getting {}".format(self.__class__.__name__, oid))
+        self.logger.debug("{}: getting {}".format(self.__class__.__name__, oid))
 
         if view=="instance_tags":
             result = self.get(oid, level, view="meta")
-
-            # logging.debug(result)
 
             oid = result['Instances'][0]
             view = "tags"
@@ -69,13 +66,13 @@ class Orthanc(Pattern):
             return result
 
     def put(self, item: Dixel):
-        logging.debug("{}: putting {}".format(self.__class__.__name__, item.uid))
+        self.logger.debug("{}: putting {}".format(self.__class__.__name__, item.uid))
 
         if item.level != DicomLevel.INSTANCES:
-            logging.warning("Can only 'put' Dicom instances.")
+            self.logger.warning("Can only 'put' Dicom instances.")
             raise ValueError
         if not item.file:
-            logging.warning("Can only 'put' file data.")
+            self.logger.warning("Can only 'put' file data.")
             raise KeyError
         result = self.gateway.put_item(item.file)
 
@@ -141,8 +138,6 @@ class Orthanc(Pattern):
 
             if item.level == DicomLevel.STUDIES and item.meta.get('Modality'):
                 q['ModalitiesInStudy'] = item.meta.get('Modality')
-
-            # logging.debug(pformat(q))
 
             return q
 

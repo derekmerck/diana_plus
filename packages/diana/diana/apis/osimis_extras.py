@@ -28,7 +28,7 @@ def get_annotation(source: Orthanc, study: Dixel) -> Union[dict, None]:
         ret = json.loads(ret)
 
     except:
-        logging.warning("No annotations to retrieve")
+        source.logger.warning("No annotations to retrieve")
         return
 
     study_annotations = {

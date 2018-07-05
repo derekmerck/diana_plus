@@ -1,30 +1,21 @@
 """
-diana-star quick-test
+diana-star api-test
 Merck, summer 2018
 
-Confirm's basic read/write functionality for local and distributed ("star") api's.
+Asserts basic get/put functionality for local and distributed ("star") api's.
 Test different remote control environments by setting broker and service info before
 starting any services.
 
 $ pushd test/vagrant && vagrant up && popd
 $ ansible-playbook -i test/testbench.yml stack/diana_play.yml
 $ celery apps/diana-worker/app.py worker -Q "default,file" -l INFO
-$ python3 test/diana_distrib.py
+$ python3 test/api-test.py
 
 """
+# Keep this before any diana imports
+from config import services, test_star
 
-import os
-
-# os.environ['DIANA_BROKER']="redis://:D1anA!@rad_research:6379/1"
-# os.environ['DIANA_RESULT']="redis://:D1anA!@rad_research:6379/2"
-# service_cfg = "secrets/lifespan_services.yml"
-
-os.environ['DIANA_BROKER']="redis://:passw0rd!@192.168.33.10:6379/1"
-os.environ['DIANA_RESULT']="redis://:passw0rd!@192.168.33.10:6379/2"
-service_cfg = "test/dev_services.yml"
-
-import logging, yaml, time
-from pprint import pprint, pformat
+import logging, time
 from celery import chain
 from diana.apis import Dixel
 from diana.utils import DicomLevel
@@ -99,8 +90,7 @@ def test_chaining():
 
     # assert e.oid() == "69fc8df0-bde17245-284bcda1-c6506da9-3dd24afb"
 
-def test_splunk():
-
+def notest_splunk():
 
     dfio = local_apis.DicomFile(location="test/resources")
     splunk = local_apis.Splunk(**services["splunk"])
@@ -126,16 +116,12 @@ def test_splunk():
 
 if __name__=="__main__":
 
-    logging.basicConfig(level=logging.INFO)
-    logging.getLogger("requests").setLevel(logging.WARNING)
-    logging.getLogger("urllib3").setLevel(logging.WARNING)
-
-    with open(service_cfg, "r") as f:
-        services = yaml.safe_load(f)
-
     test_local()
-    test_distrib()
-    test_chaining()
+
+    if test_star == True:
+        test_distrib()
+        test_chaining()
+
     # test_splunk()  # Need an assertion in here
 
 

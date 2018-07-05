@@ -11,6 +11,9 @@ class Dixel(Pattern):
     file  = attr.ib(default=None)
     report = attr.ib(default=None, type=RadiologyReport)
 
+    # Can't pickle a logger without dill, so Dixels don't need one
+    logger = attr.ib(init=False, default=None)
+
     # Not always the best idea, can't put them in a set if the AN is identical
     def __hash__(self):
 
