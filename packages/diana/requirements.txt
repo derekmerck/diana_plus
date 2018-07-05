@@ -1,4 +1,4 @@
-attrs
+attrs >= 0.3.1
 celery
 python-dateutil
 dill
