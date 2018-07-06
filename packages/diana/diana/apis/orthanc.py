@@ -105,7 +105,8 @@ class Orthanc(Pattern):
         if remove:
             self.remove(item)
         # self.logger.debug(result)
-        return self.get( result['ID'], level=item.level )
+        if result:
+            return self.get( result['ID'], level=item.level )
 
     def remove(self, item: Dixel):
         oid = item.oid()

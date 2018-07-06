@@ -68,8 +68,13 @@ class TextFile(FileHandler):
 @attr.s
 class DicomFile(FileHandler):
 
+    def exists(self, fn: str, path: str, explode: Sequence=None) -> bool:
+        fp = self.fp(fn, path, explode)
+        return os.path.isfile(fp)
+
     def write(self, fn: str, data, path: str, explode: Sequence=None):
         fp = self.fp(fn, path, explode)
+        self.logger.debug("Writing {}".format(fp))
 
         if not os.path.isdir( os.path.dirname(fp) ):
             self.logger.debug("Creating dir tree for {}".format( os.path.dirname(fp) ))
@@ -80,8 +85,7 @@ class DicomFile(FileHandler):
 
     def read(self, fn: str, path: str=None, explode: Sequence=None, pixels: bool=False):
         fp = self.fp(fn, path, explode)
-
-        self.logger.warning(fp)
+        self.logger.debug("Reading {}".format(fp))
 
         def is_dicom(fp):
             try:

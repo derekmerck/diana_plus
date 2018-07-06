@@ -60,26 +60,35 @@ class DicomFile(Pattern):
     def connect(self):
         return gateway.DicomFile(location=self.location)
 
-    def check(self, fn: str, path: str=None, explode: Sequence=None) -> bool:
-        if not path:
-            path = self.location
-        fp = self.gateway.fp(fn, path, explode)
-        return os.path.isfile(fp)
+    def check(self, item: Dixel, path: str=None, fn_from: str="FileName", explode: Sequence=None) -> bool:
 
-    def put(self, item: Dixel, path: str=None, explode: Sequence=None) -> Dixel:
-        fn = item.meta['FileName']
-        data = item.file
-        if not path:
-            path = self.location
-
-        # self.logger.debug("path: {}".format(path))
-
+        fn = item.meta.get(fn_from)
         if item.level == DicomLevel.INSTANCES and \
                 os.path.splitext(fn)[-1:] != ".dcm":
             fn = fn + '.dcm'   # Single file
         if item.level < DicomLevel.INSTANCES and \
                 os.path.splitext(fn)[-1:] != ".zip":
             fn = fn + '.zip'   # Archive format
+
+        if not path:
+            path = self.location
+
+        return self.gateway.exists(fn, path=path, explode=explode)
+
+    def put(self, item: Dixel, path: str=None, fn_from: str="FileName", explode: Sequence=None) -> Dixel:
+
+        fn = item.meta.get(fn_from)
+        if item.level == DicomLevel.INSTANCES and \
+                os.path.splitext(fn)[-1:] != ".dcm":
+            fn = fn + '.dcm'   # Single file
+        if item.level < DicomLevel.INSTANCES and \
+                os.path.splitext(fn)[-1:] != ".zip":
+            fn = fn + '.zip'   # Archive format
+
+        if not path:
+            path = self.location
+
+        data = item.file
 
         self.gateway.write(fn, data, path=path, explode=explode )
         return item

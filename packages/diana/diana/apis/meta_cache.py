@@ -49,7 +49,11 @@ class MetaCache(Pattern):
 
         meta = self.cache.get( id )
         # self.logger.debug(meta)
-        level  = DicomLevel.of( meta.get("_level" ) )
+        if type( meta.get("_level") ) == DicomLevel:
+            level = meta.get("_level")
+        else:
+            level = DicomLevel.of( meta.get("_level" ) )
+
         report = meta.get('_report')
         uid    = meta.get('_uid')
 

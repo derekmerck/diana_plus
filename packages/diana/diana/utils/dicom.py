@@ -7,6 +7,7 @@ from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
+
 class DicomLevel(Enum):
     PATIENTS  = 0
     STUDIES   = 1
