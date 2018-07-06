@@ -38,10 +38,13 @@ class Porter(object):
                 logging.debug("Skipping {} - already exists".format(d.meta["ShamAccession"]))
                 continue
 
+            # Shouldn't have a self-mutating function that can go to None...
+            my_accession = d.meta['ShamAccession']
             d = self.source.find_item(d, self.proxy_domain, True)
 
             if not d:
-                logging.debug("Skipping {} - found but unretrievable".format(d.meta["ShamAccession"]))
+                # obviously not d b/c d is None by now...
+                logging.debug("Skipping {} - found but unretrievable".format(my_accession))
                 continue
 
             try:
