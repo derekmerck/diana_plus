@@ -6,6 +6,15 @@ group: edge
 python:
   - "3.6"
 
+services:
+  - docker
+
+addons:
+  apt:
+    packages:
+      - docker-ce
+
+
 install:
 
   - pip3 install -r requirements.txt

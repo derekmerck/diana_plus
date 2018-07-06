@@ -6,7 +6,7 @@ from csv import DictReader, DictWriter
 from typing import Union, Mapping
 from dateutil import parser as dtparser
 import attr
-from diana.utils import Pattern, DicomLevel
+from diana.utils import Pattern, DicomLevel, dicom_strpdate
 from diana.utils.smart_encode import stringify
 from .dixel import Dixel
 
@@ -101,13 +101,19 @@ class MetaCache(Pattern):
                 if not item.get("_level"):
                     item["_level"] = level
 
-                for k,v in item.items():
+                for k, v in item.items():
                     # if this k is a "date", normalize it
-                    if k.lower().find("date") >= 0 or \
-                            k.lower().find("dob") >= 0:
-                        item[k] = dtparser.parse(v)
-
-
+                    if v and \
+                            (k.lower().find("date") >= 0 or \
+                            k.lower().find("dob") >= 0 ):
+                        try:
+                            # self.logger.debug(v)
+                            item[k] = dtparser.parse(v)
+                        except ValueError:
+                            try:
+                                item[k] = dicom_strpdate(v)
+                            except:
+                                raise ValueError("No date can be parsed from {}".format(v))
                 # print(item)
 
                 self.cache[item[self.key_field]] = item

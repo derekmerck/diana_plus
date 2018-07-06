@@ -86,6 +86,11 @@ def dicom_strptime( dts: str ) -> datetime:
     ts = datetime.now()
     return ts
 
+def dicom_strpdate( dts: str) -> datetime.date:
+
+    return datetime.strptime( dts, "%Y%m%d" ).date()
+
+
 
 def dicom_strftime( dt: datetime ) -> str:
     return dt.strftime( "%Y%m%d%H%M%S" )

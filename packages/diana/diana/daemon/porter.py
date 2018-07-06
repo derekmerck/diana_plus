@@ -21,6 +21,7 @@ class Porter(object):
     source = attr.ib( type=Orthanc )
     proxy_domain = attr.ib( type=str )
     dest = attr.ib( type=DicomFile )
+    explode = attr.ib( default=None )
     # anonymize = attr.ib( default=True )
 
     def run(self, dixels: MetaCache):
@@ -33,7 +34,7 @@ class Porter(object):
                 continue
 
             # Check and see if file already exists
-            if self.dest.check(d, fn_from="ShamAccession", explode=(1, 1)):
+            if self.dest.check(d, fn_from="ShamAccession", explode=self.explode):
                 logging.debug("Skipping {} - already exists".format(d.meta["ShamAccession"]))
                 continue
 
@@ -51,7 +52,7 @@ class Porter(object):
 
             e = self.source.get(e, view="archive")
 
-            self.dest.put(e, fn_from="AccessionNumber", explode=(1, 1))
+            self.dest.put(e, fn_from="AccessionNumber", explode=self.explode)
 
             # Clean up proxy as you go
             self.source.remove(d)
