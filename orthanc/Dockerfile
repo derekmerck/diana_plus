@@ -9,8 +9,8 @@ MAINTAINER Derek Merck <derek_merck@brown.edu>
 
 # Args for use inside the cross-compiler must be declared inside the cross compiler!
 ARG TINI_VERS="v0.18.0"
-#ARG TINI_BIN=tini-armhf
 ARG TINI_BIN="tini"
+#ARG TINI_BIN=tini-armhf
 ARG DIANA_PW="passw0rd!"
 
 ADD https://github.com/krallin/tini/releases/download/${TINI_VERS}/${TINI_BIN} /bin/tini
@@ -18,7 +18,7 @@ RUN chmod +x /bin/tini
 ENTRYPOINT ["/bin/tini", "--"]
 
 RUN apt update  \
-  && apt install -y \
+    && apt install -y --no-install-recommends \
       git \
       build-essential \
       unzip \
