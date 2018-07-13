@@ -30,7 +30,7 @@ before_install:
   # Register qemu as cross-compiler
   - docker run --rm --privileged multiarch/qemu-user-static:register --reset
 
-  - docker-compose -f docker/docker-compose.build.yml build $SERVICE-$ARCH_TAG
+  - docker-compose -f docker/docker-compose.builder.yml build $SERVICE-$ARCH_TAG
 
   # Login to docker for push
   - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
