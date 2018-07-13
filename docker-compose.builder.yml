@@ -41,4 +41,11 @@ services:
   learn-amd64:
     build:
       context: ./learn
-      image: derekmerck/learn:amd664
+      image: derekmerck/learn:amd64
+
+  learn-movidius-amd64:
+    build:
+      context: ./learn
+      dockerfile: Dockerfile-movidius
+      image: derekmerck/learn-movidius:amd664
+
