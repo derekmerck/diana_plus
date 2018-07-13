@@ -1,0 +1,81 @@
+# ==========================
+# CENTRAL SERVICES
+# ==========================
+#
+# - May be divided across multiple systems (indexer, servers, archive, database, receiver, workers)
+# - Index is amd64 only
+# - Configure with playbook
+
+index:
+  # amd64 ONLY
+  - splunk: pword, diana hec
+
+web server:
+  - nginx:
+  - certbot:
+
+dicom nodes:
+  # osimis for review and annotation, vanilla orthanc for storage/forwarding
+  - orthanc/osimis_0: pword
+  - ...
+  - orthanc/osimis_n: pword
+
+database:
+  - postgres: pword
+
+receiver:
+  - web portal:
+  - ftp: shared fs with diana-worker
+
+broker:
+  - redis: pword
+
+diana-worker:
+  - diana: shared fs with receiver
+
+
+# ==========================
+# INDEPENDENT REPORTER
+# ==========================
+#
+# - arch may be amd64 or armv7
+# - needs to be configured to use a central index
+# - needs to be configurable with Resin (docker-compose file)
+
+dicom node:
+  - orthanc: pword
+
+broker:
+  - redis: pword
+
+diana-worker:
+  - diana:
+
+
+# ==========================
+# GPU WORKER
+# ==========================
+#
+# - arch may be amd64 or armv7
+# - needs to be configured to use a central index
+# - needs to be configurable with Resin (docker-compose file)
+
+diana-learn:
+  - diana:
+  - keras:
+  - movidius:
+
+
+
+# ==========================
+# TESTING (local)
+# ==========================
+#
+# - arch must be amd64
+# - needs to be configurable with docker-compose (for .travis)
+
+#index:
+#  - splunk: pword, diana hec
+
+dicom node:
+  - orthanc: pword

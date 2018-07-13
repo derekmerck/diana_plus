@@ -1,0 +1,9 @@
+version: '3'
+
+services:
+
+  # Private redis broker service (has amd64 and armv7l versions)
+  keras:
+    image: rcdiana/learn
+    environment:
+      TZ: America/New_York

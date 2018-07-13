@@ -11,6 +11,7 @@ services:
     environment:
       TZ: America/New_York
 
+  # Private index service (only amd64 version)
   index:
     image: splunk/splunk
     ports:
@@ -28,7 +29,7 @@ services:
   # Diana-Worker service (should be able to build both amd64 and arm7 versions
   worker:
     image: derekmerck/diana-worker:amd64
-    command:    ["python3", "diana-star/app.py", "worker", "-n", "diana@%host", "-l", "INFO"]
+    command: ["python3", "diana-star/app.py", "worker", "-n", "diana@%host", "-l", "INFO"]
     links:
       - broker
       - index
@@ -39,7 +40,8 @@ services:
 
   # Private orthanc dicom proxy service (only amd64 version, need osimis...)
   dicom:
-    image: derekmerck/orthanc:amd64
+#    image: derekmerck/orthanc:amd64
+    image: jodogne/orthanc
     ports:
       - "4242:4242"
       - "8042:8042"  # Putting this on 80 makes it publishable on Resin

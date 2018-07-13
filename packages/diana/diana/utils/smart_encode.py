@@ -1,11 +1,11 @@
 # Encodes datetime and hashes
 
 import json
-from datetime import datetime
+from datetime import datetime, date
 
 
 def stringify(obj):
-    if isinstance(obj, datetime):
+    if isinstance(obj, datetime) or isinstance(obj, date):
         return obj.isoformat()
 
     if hasattr(obj, 'hexdigest'):

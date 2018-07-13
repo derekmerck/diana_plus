@@ -52,6 +52,22 @@ class RadiologyReport(object):
 
         return (radcat, radcat3)
 
+@attr.s
+class MammographyReport(RadiologyReport):
+
+    def birads(self):
+
+        # "BI-RADS CATEGORY 4"
+
+        birad_pattern = re.compile(r'(?i)BI-RADS CATEGORY ([1-6]):?')
+        match = birad_pattern.findall(self.text)
+
+        if len(match)>0:
+            return max(match)
+        else:
+            logging.error(self.text)
+            raise ValueError("No BI-RADS score indicated!")
+
 
 @attr.s
 class LungScreeningReport(RadiologyReport):

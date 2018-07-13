@@ -1,11 +1,11 @@
 # DICOM node or proxy
 
 import datetime
+from pprint import pformat
 from typing import Mapping, Callable, Union
 import attr
-from diana.utils import DicomLevel, Pattern, gateway, dicom_clean_tags, dicom_strfdate
+from diana.utils import DicomLevel, Pattern, gateway, dicom_clean_tags, dicom_strfdate, dicom_strpdate, dicom_strpdtime
 from .dixel import Dixel
-
 
 def simple_sham_map(meta):
     return {
@@ -15,11 +15,11 @@ def simple_sham_map(meta):
             'PatientBirthDate': dicom_strfdate( meta['ShamDoB'] ) if isinstance(meta["ShamDoB"], datetime.date) else meta["ShamDoB"],
             'AccessionNumber': meta['ShamAccession'].hexdigest() if hasattr( meta["ShamAccession"], "hexdigest") else meta["ShamAccession"],
         },
-        'Keep': ['PatientSex', 'StudyDescription', 'SeriesDescription'],
+        'Keep': ['PatientSex', 'StudyDescription', 'SeriesDescription', 'StudyDate'],
         'Force': True
     }
 
-@attr.s
+@attr.s(hash=False)
 class Orthanc(Pattern):
     host = attr.ib( default="localhost" )
     port = attr.ib( default="8042" )
@@ -98,6 +98,13 @@ class Orthanc(Pattern):
             return result
 
     # Handlers
+
+    def check(self, item: Dixel) -> bool:
+        try:
+            res = self.get_item(item)
+            return True
+        except:
+            return False
 
     def anonymize(self, item: Dixel, replacement_map: Callable[[dict],dict]=simple_sham_map, remove: bool=False) -> Dixel:
         replacement_dict = replacement_map(item.meta)
@@ -184,16 +191,18 @@ class Orthanc(Pattern):
         if results:
             worklist = set()
             for d in results:
+                d['StudyDateTime'] = dicom_strpdtime(d['StudyDate'] + d['StudyTime'])
+                d['PatientBirthDate'] = dicom_strpdate(d['PatientBirthDate'])
+                # self.logger.debug(pformat(d))
                 worklist.add( Dixel(meta=d, level=level ) )
 
             return worklist
 
-
-    def send(self, item: Dixel, peer: str=None, modality: str=None):
-        if modality:
-            return self.gateway.send(item.id, item.level, modality_dest=modality)
-        if peer:
-            return self.gateway.send(item.id, item.level, peer_dest="peer")
+    def send(self, item: Dixel, peer_dest: str=None, modality_dest: str=None):
+        if modality_dest:
+            return self.gateway.send_item(item.oid(), dest=modality_dest, dest_type="modalities")
+        if peer_dest:
+            return self.gateway.send_item(item.oid(), dest=peer_dest, dest_type="peers")
 
     def clear(self, desc: str="all"):
         if desc == "all" or desc == "studies":
@@ -228,3 +237,14 @@ class Orthanc(Pattern):
         oids = self.gateway.get("studies")
         for oid in oids:
             yield Dixel(meta={'oid': oid}, level=DicomLevel.STUDIES)
+
+
+@attr.s
+class OrthancPeer(Pattern):
+    # An Orthanc peer is a way to reverse peer.put(item) to source.send(item, peer) for templating
+    source = attr.ib( type=Orthanc, default=None )
+    peer_name = attr.ib( type=str, default=None )
+
+    def put(self, item):
+        self.source.send(item, peer=self.peer_name)
+

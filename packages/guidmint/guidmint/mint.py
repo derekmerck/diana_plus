@@ -39,7 +39,6 @@ class GUIDMint(object):
                  max_date_offset = DEFAULT_MAX_DATE_OFFSET,
                  hash_prefix_length = DEFAULT_HASH_PREFIX_LENGTH,
                  **kwargs):
-        self.__version__ = __version__
         self.max_date_offset = max_date_offset
         self.hash_prefix_length = hash_prefix_length
         self.logger = logging.getLogger(self.name())

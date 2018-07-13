@@ -13,8 +13,9 @@ files -> splunk
 """
 
 import logging
+from typing import Union
 import attr
-from diana.apis import MetaCache, Orthanc, DicomFile
+from diana.apis import MetaCache, Orthanc, DicomFile, Dixel
 
 @attr.s
 class Porter(object):
@@ -24,6 +25,25 @@ class Porter(object):
     explode = attr.ib( default=None )
     # anonymize = attr.ib( default=True )
 
+    def run2(self, dixels: MetaCache):
+
+        for d in dixels:
+            e = self.get_item(d)
+            self.move_item(e)
+            self.clean_up([d,e])
+
+    def clean_up(self, dixels):
+        # optionally clean up as you go
+        for d in dixels:
+            self.source.remove(d)
+
+    def get_item(self, d: Dixel) -> Dixel:
+        raise NotImplementedError
+
+    def move_item(self, d: Dixel) -> Dixel:
+        raise NotImplementedError
+
+    # Original Proxy+FileHandler
     def run(self, dixels: MetaCache):
 
         for d in dixels:
@@ -61,6 +81,57 @@ class Porter(object):
             self.source.remove(d)
             self.source.remove(e)
 
+
+@attr.s
+class ProxyGetMixin(object):
+    source = attr.ib( type=Orthanc )
+    proxy_domain = attr.ib( type=str )
+
+    def get_item(self, d: Dixel) -> Union[Dixel, None]:
+        # Check for unfindable
+        if not d.meta.get("StudyInstanceUID"):
+            logging.debug("Skipping {} - apparently unfindable".format(d.meta["ShamAccession"]))
+            return
+
+        # Check and see if file already exists:
+        if self.dest.check(d):  # , fn_from="ShamAccession", explode=self.explode):
+            logging.debug("Skipping {} - already exists".format(d.meta["ShamAccession"]))
+            return
+
+        # Shouldn't have a self-mutating function that can go to None...
+        my_accession = d.meta['ShamAccession']
+        d = self.source.find_item(d, self.proxy_domain, True)
+
+        if not d:
+            # obviously not d b/c d is None by now...
+            logging.debug("Skipping {} - found but unretrievable".format(my_accession))
+            return
+
+        try:
+            e = self.source.anonymize(d)
+        except:
+            logging.debug("Skipping {} - can not anonymize (bad uid?)".format(d.meta["ShamAccession"]))
+            return
+
+        return e
+
+
+@attr.s
+class FilePutMixin(object):
+    dest = attr.ib( type=DicomFile )
+    explode = attr.ib( default=None )
+
+    def move_item(self, e: Dixel):
+        e = self.source.get(e, view="archive")
+        self.dest.put(e, fn_from="AccessionNumber", explode=self.explode)
+
+
+@attr.s
+class PeerSendMixin(object):
+    peer_dest = attr.ib( type=str )
+
+    def move_item(self, e: Dixel):
+        self.source.send(e, peer_dest=self.peer_dest)
 
 
 

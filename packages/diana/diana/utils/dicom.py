@@ -1,13 +1,13 @@
 # Diana-agnostic DICOM info
 
-import logging
+import logging, functools
 from enum import Enum
 from hashlib import sha1
 from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
-
+# @functools.total_ordering
 class DicomLevel(Enum):
     PATIENTS  = 0
     STUDIES   = 1
@@ -16,6 +16,12 @@ class DicomLevel(Enum):
 
     # Provides a partial ordering so they are comparable
     # Note that Study < Instance under this order
+    # def __eq__(self, other):
+    #     if self.__class__ is other.__class__:
+    #         # logging.debug("{}<{}".format(self.value, other.value))
+    #         return self.value == other.value
+    #     return NotImplemented
+
     def __lt__(self, other):
         if self.__class__ is other.__class__:
             # logging.debug("{}<{}".format(self.value, other.value))
@@ -36,12 +42,12 @@ class DicomLevel(Enum):
     def parent_level(self):
         if self == DicomLevel.PATIENTS:
             raise ValueError
-        return DicomLevel( int(self) + 1 )
+        return DicomLevel( int(self.value) + 1 )
 
     def child_level(self):
         if self == DicomLevel.INSTANCES:
             raise ValueError
-        return DicomLevel( int(self) - 1 )
+        return DicomLevel( int(self.value) - 1 )
 
     def __str__(self):
         return '{0}'.format(self.name.lower())
@@ -59,7 +65,7 @@ def orthanc_id(PatientID, StudyInstanceUID, SeriesInstanceUID=None, SOPInstanceU
     return '-'.join(d[i:i+8] for i in range(0, len(d), 8))
 
 
-def dicom_strptime( dts: str ) -> datetime:
+def dicom_strpdtime( dts: str ) -> datetime:
 
     if not dts:
         logger.error("Failed to parse empty date time string")
@@ -86,6 +92,10 @@ def dicom_strptime( dts: str ) -> datetime:
     ts = datetime.now()
     return ts
 
+def dicom_strptime( dts: str) -> datetime:
+
+    return datetime.strptime( dts, "%H%M%S" )
+
 def dicom_strpdate( dts: str) -> datetime.date:
 
     return datetime.strptime( dts, "%Y%m%d" ).date()
@@ -102,3 +112,7 @@ def dicom_strfdate( dt: datetime ) -> str:
 
 def dicom_strftime2( dt: datetime ) -> (str, str):
     return (dt.strftime( "%Y%m%d" ), dt.strftime( "%H%M%S" ))
+
+
+def dicom_strfname( names: tuple) -> str:
+    return "^".join(names)

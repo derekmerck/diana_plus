@@ -11,34 +11,34 @@ Prepare a DICOM tag set for ingestion into splunk:
 import logging, json, os
 from pprint import pprint, pformat
 from .smart_encode import SmartJSONEncoder
-from .dicom import dicom_strptime
+from .dicom import dicom_strpdtime
 
 
 def parse_timestamps(tags):
 
     # Convert DICOM Date/Times into ISO DateTimes
     try:
-        t = dicom_strptime(tags['StudyDate'] + tags['StudyTime'])
+        t = dicom_strpdtime(tags['StudyDate'] + tags['StudyTime'])
         tags['StudyDateTime'] = t
     except KeyError:
         pass
 
     try:
-        t = dicom_strptime(tags['SeriesDate'] + tags['SeriesTime'])
+        t = dicom_strpdtime(tags['SeriesDate'] + tags['SeriesTime'])
         tags['SeriesDateTime'] = t
     except KeyError:
         pass
 
     # Not all instances have ObservationDateTime
     try:
-        t = dicom_strptime(tags['ObservationDateTime'])
+        t = dicom_strpdtime(tags['ObservationDateTime'])
         tags['ObservationDateTime'] = t
     except KeyError:
         pass
 
     # Not all instances have an InstanceCreationDate/Time
     try:
-        t = dicom_strptime(tags['InstanceCreationDate'] + tags['InstanceCreationTime'])
+        t = dicom_strpdtime(tags['InstanceCreationDate'] + tags['InstanceCreationTime'])
         tags['InstanceCreationDateTime'] = t
     except KeyError:
         pass

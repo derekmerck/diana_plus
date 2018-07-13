@@ -1,5 +1,6 @@
 import logging
 import attr
+import datetime
 from dateutil import parser as dtparser
 from .report import RadiologyReport
 from ..utils import Pattern, DicomLevel, orthanc_id
@@ -31,13 +32,15 @@ class Dixel(Pattern):
             raise ValueError("Wrong dixel levels to update!")
 
         updatable = ["AccessionNumber", "StudyInstanceUID", "SeriesInstanceUID", "SOPInstanceUID", "PatientID", \
-                     "PatientName"]
+                     "PatientName", "PatientBirthDate", "SeriesNumber", "StudyDateTime"]
 
         for k in updatable:
             v = other.meta.get(k)
             if v:
                 # logging.debug("Found an update {}:{}".format(k,v))
-                if k.lower().find("date") >= 0:
+                if k.lower().find("date") >= 0 and \
+                        type(v) != datetime.datetime and \
+                        type(v) != datetime.date:
                     v = dtparser.parse(v)
                 self.meta[k] = v
 

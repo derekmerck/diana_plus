@@ -1,5 +1,8 @@
 import uuid, logging
 import attr
+import inspect
+from pprint import pprint
+
 
 
 @attr.s(cmp=False, hash=None)
@@ -51,8 +54,15 @@ class Pattern(object):
         the target class _must_ be in the global namespace.  For example, in diana, the api
         factory imports all diana.apis.
         """
+
         class_name = pattern.get('class')
         del (pattern['class'])
-        _cls = globals()[class_name]
+
+        # pprint(inspect.stack()[1][0].f_globals)
+        _cls = inspect.stack()[1][0].f_globals[class_name]
+
+        # _cls = globals()[class_name]
         return _cls(**pattern)
+
+
 

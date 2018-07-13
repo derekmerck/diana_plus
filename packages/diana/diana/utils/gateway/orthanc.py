@@ -141,7 +141,7 @@ class Orthanc(Requester):
         return ret
 
     def send_item(self, oid: str, dest: str, dest_type):
-        resource = "/{}/{}/send".format(dest_type, dest)
+        resource = "/{}/{}/store".format(dest_type, dest)
         data = oid
         headers = {'content-type': 'application/text'}
         self.post(resource, data=data, headers=headers)

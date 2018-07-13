@@ -104,12 +104,19 @@ class PseudoMint(GUIDMint):
 
     def pseudonym(self, guid, gender=None):
 
-        return self.name_bank.get_name(guid, initials=guid, gender=gender)
+        names = self.name_bank.get_name(guid, initials=guid, gender=gender)
+        return names
+        # return "^".join(names)
 
-    def pseudo_identity(self, name, gender=None, dob=None, age=None, ref_date=None, format=None):
+    def pseudo_identity(self, name, dob, gender=None, age=None, ref_date=None, format=None):
 
-        if dob and not isinstance(dob, datetime):
-            dob = dateparser.parse(dob)
+        if not isinstance(dob, datetime):
+            try:
+                dob = dateparser.parse(dob)
+                dob_str = str(dob.date())
+            except:
+                dob_str = "U"
+        else:
             dob_str = str(dob.date())
 
         if not gender:

@@ -1,0 +1,27 @@
+
+dist: trusty
+language: python
+group: edge
+
+python:
+  - "3.6"
+
+services:
+  - docker
+
+addons:
+  apt:
+    packages:
+      - docker-ce
+
+
+install:
+
+  - pip3 install -r requirements.txt
+  - pip3 install -e packages/diana packages/guidmint
+
+script:
+
+  - docker-compose -f /Users/derek/dev/diana_plus/docker/docker-compose.yml dicom up -d
+
+  - pytest test

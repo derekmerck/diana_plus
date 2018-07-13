@@ -37,12 +37,23 @@ class MetaCache(Pattern):
         "Report Text": "_report"
     }
 
+    def did(self, meta):
+        level = meta["_level"]
+        if level < DicomLevel.SERIES:
+            return meta[self.key_field]
+
+        elif level == DicomLevel.SERIES:
+            return meta[self.key_field], meta['SeriesDescription']
+
+        elif level == DicomLevel.INSTANCES:
+            return meta[self.key_field], meta['SeriesDescription'], meta['InstanceNumber']
+
     def get(self, item: Union[Dixel, str], **kwargs):
 
         # Get needs to accept oid's or items with oid's
         if type(item) == Dixel:
             id = item.uid
-        elif type(item) == str:
+        elif type(item) == str or type(item) == tuple:
             id = item
         else:
             raise ValueError("Can not get type {}!".format(type(item)))
@@ -53,6 +64,7 @@ class MetaCache(Pattern):
             level = meta.get("_level")
         else:
             level = DicomLevel.of( meta.get("_level" ) )
+            meta['_level'] = level
 
         report = meta.get('_report')
         uid    = meta.get('_uid')
@@ -77,7 +89,7 @@ class MetaCache(Pattern):
         meta['_level'] = item.level
         if item.report:
             meta['_report'] = item.report
-        self.cache[meta[self.key_field]] = meta
+        self.cache[self.did(meta)] = meta
 
     def load(self, fp: str=None, level=DicomLevel.STUDIES, keymap: Mapping=None):
         self.logger.debug("loading")
@@ -100,6 +112,8 @@ class MetaCache(Pattern):
                     item = remap_keys(item)
                 if not item.get("_level"):
                     item["_level"] = level
+                else:
+                    item["_level"] = DicomLevel.of(item.get("_level"))
 
                 for k, v in item.items():
                     # if this k is a "date", normalize it
@@ -114,15 +128,20 @@ class MetaCache(Pattern):
                                 item[k] = dicom_strpdate(v)
                             except:
                                 raise ValueError("No date can be parsed from {}".format(v))
-                # print(item)
 
-                self.cache[item[self.key_field]] = item
+                # self.logger.debug(item)
+
+                self.cache[self.did(item)] = dict(item)
 
     def dump(self, fp=None, fieldnames=None):
         self.logger.debug("dumping")
         fp = fp or self.location
         fieldnames = fieldnames or \
-                     self.cache.values().__iter__().__next__().keys()
+                     list( self.cache.values().__iter__().__next__().keys() )
+        if "_report" not in fieldnames:
+            fieldnames.append("_report")
+        if "_level" not in fieldnames:
+            fieldnames.append("_level")
 
         # print(fieldnames)
 
@@ -140,6 +159,7 @@ class MetaCache(Pattern):
     def __iter__(self):
         # self.logger.debug("Setting iterator = cache.keys()")
         self.iterator = iter(self.cache.keys())
+        # self.logger.debug(self.cache.keys())
         return self
 
     def __next__(self):

@@ -6,6 +6,8 @@ Monitor any Diana service on a time interval. Subclass with
 new `discover` and `handle` functions to customize it for a
 particular class.  See `harvest_dose.py` for an example.
 
+TODO: Collect := at interval: Survey(source, q, dest, q) -> worklist; Transport(source, dest, worklist)
+
 """
 
 import logging

@@ -1,11 +1,9 @@
-
 dist: trusty
 language: python
 group: edge
 
 python:
   - "3.6"
-
 services:
   - docker
 
@@ -14,14 +12,35 @@ addons:
     packages:
       - docker-ce
 
+env:
+  matrix:
+#    - ARCH_TAG="amd64"   SERVICE="dicom"
+#    - ARCH_TAG="arm32v7" SERVICE="dicom"
+    - ARCH_TAG="amd64"   SERVICE="diana-worker"
+    - ARCH_TAG="arm32v7" SERVICE="diana-worker"
+    - ARCH_TAG="amd64"   SERVICE="learn"
+    - ARCH_TAG="arm32v7" SERVICE="learn"
 
-install:
+before_install:
 
-  - pip3 install -r requirements.txt
-  - pip3 install -e packages/diana packages/guidmint
+  # Put docker into "experimental" for manifest function
+  - mkdir -p $HOME/.docker
+  - echo '{"experimental":"enabled"}' > "$HOME/.docker/config.json"
 
-script:
+  # Register qemu as cross-compiler
+  - docker run --rm --privileged multiarch/qemu-user-static:register --reset
 
-  - docker-compose -f /Users/derek/dev/diana_plus/docker/docker-compose.yml dicom up -d
+  - docker-compose -f docker/docker-compose.build.yml build $SERVICE-$ARCH_TAG
 
-  - pytest test
+  # Login to docker for push
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+
+  - docker push "$DOCKER_USERNAME/$SERVICE:$ARCH_TAG"
+
+script: true
+
+after_script: true
+
+  # Manifest and push, need a "finally"
+
+
