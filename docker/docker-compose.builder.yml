@@ -45,17 +45,16 @@ services:
 
   learn-movidius-arm32v7:
     build:
-      context: ./learn
-      dockerfile: Dockerfile-movidius
+      context: ./movidius
       args:
-        ARCH_TAG: arm32v7
-    image: derekmerck/learn-movidius:arm32v7
+        RESIN_ARCH: raspberrypi3
+        TINI_BIN: tini-armhf
+    image: derekmerck/movidius:arm32v7
 
   learn-movidius-amd64:
     build:
-      context: ./learn
-      dockerfile: Dockerfile-movidius
+      context: ./movidius
       args:
         ARCH_TAG: amd64
-    image: derekmerck/learn-movidius:amd64
+    image: derekmerck/movidius:amd64
 

@@ -14,12 +14,20 @@ addons:
 
 env:
   matrix:
-    - ARCH_TAG="amd64"   SERVICE="dicom"
-#    - ARCH_TAG="arm32v7" SERVICE="dicom"  # Never finishes in 50 mins!  Build elsewhere.
+    - ARCH_TAG=amd664
+    - SERVICE=dicom
+    - SERVICE=diana-worker
+    - SERVICE=learn
+    - SERVICE=learn-movidius
+
+#    - ARCH_TAG="amd64"   SERVICE="dicom"
+##    - ARCH_TAG="arm32v7" SERVICE="dicom"  # Never finishes in 50 mins -- build elsewhere
 #    - ARCH_TAG="amd64"   SERVICE="diana-worker"
 #    - ARCH_TAG="arm32v7" SERVICE="diana-worker"
-    - ARCH_TAG="amd64"   SERVICE="learn"
-    - ARCH_TAG="arm32v7" SERVICE="learn"
+#    - ARCH_TAG="amd64"   SERVICE="learn"
+##    - ARCH_TAG="arm32v7" SERVICE="learn"  # Does not finish in 50 mins -- build elsewhere
+#    - ARCH_TAG="amd64"   SERVICE="learn-movidius"
+##    - ARCH_TAG="amd64"   SERVICE="learn-movidius"
 
 before_install:
 
@@ -42,5 +50,3 @@ script: true
 after_script: true
 
   # Manifest and push, need a "finally"
-
-
