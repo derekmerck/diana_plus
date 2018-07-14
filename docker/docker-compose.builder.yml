@@ -1,74 +1,97 @@
 version: '3'
 
+# amd64 can be compiled and pushed from Travis
+# arm32v7 has to cross-compiled currently
+# arm64v8 orthanc and diana-worker can be compiled and pushed from Packet
+
+# Resin using Packet ARM servers to compile arm32:
+# - https://resin.io/blog/docker-builds-on-arm-servers-youre-not-crazy-your-builds-really-are-5x-faster/
+# But apparently cannot cross-compile for rpi natively on a Cavium ThunderX ARMv8:
+# - https://gitlab.com/gitlab-org/omnibus-gitlab/issues/2544
+
 services:
 
   # ---------------------------
   # orthanc
   # ---------------------------
 
-  orthanc-arm32v7:
-    build:
-      context: ./orthanc
-      args:
-        RESIN_ARCH: raspberrypi3
-        TINI_BIN: tini-armhf
-    image: derekmerck/orthanc:arm32v7
-
   orthanc-amd64:
     build:
       context: ./orthanc
     image: derekmerck/orthanc:amd64
 
+  orthanc-arm32v7:
+    build:
+      context: ./orthanc
+      args:
+        RESIN_ARCH: raspberrypi3
+    image: derekmerck/orthanc:arm32v7
+
+  orthanc-arm64v8:
+    build:
+      context: ./orthanc
+      args:
+        RESIN_ARCH: generic-aarch64
+    image: derekmerck/orthanc:arm64v8
+
+
   # ---------------------------
   # diana-worker
   # ---------------------------
-
-  diana-worker-arm32v7:
-    build:
-      context: ./diana-worker
-      args:
-        RESIN_ARCH: raspberrypi3
-        TINI_BIN: tini-armhf
-    image: derekmerck/diana-worker:arm32v7
 
   diana-worker-amd64:
     build:
       context: ./diana-worker
     image: derekmerck/diana-worker:amd64
 
+  diana-worker-arm32v7:
+    build:
+      context: ./diana-worker
+      args:
+        RESIN_ARCH: raspberrypi3
+    image: derekmerck/diana-worker:arm32v7
+
+  diana-worker-arm64v8:
+    build:
+      context: ./diana-worker
+      args:
+        RESIN_ARCH: generic-aarch64
+    image: derekmerck/diana-worker:arm64v8
+
+
   # ---------------------------
   # tf-keras
   # ---------------------------
 
+  tf-keras-amd64:
+    build:
+      context: ./tf-keras
+    image: derekmerck/tf-keras:amd64
+
   tf-keras-arm32v7:
     build:
-      context: ./learn
+      context: ./tf-keras
       args:
         RESIN_ARCH: raspberrypi3
-        TINI_BIN: tini-armhf
         TF_WHL_URL: http://ci.tensorflow.org/view/Nightly/job/nightly-pi-python3/lastSuccessfulBuild/artifact/output-artifacts/
         TF_WHL_FILE: tensorflow-1.9.0rc0-cp34-none-linux_armv7l.whl
     image: derekmerck/tf-keras:arm32v7
 
-  tf-keras-amd64:
-    build:
-      context: ./learn
-    image: derekmerck/tf-keras:amd64
+  # No TF wheel for aarch64
+
 
   # ---------------------------
   # movidius
   # ---------------------------
-
-  movidius-arm32v7:
-    build:
-      context: ./movidius
-      args:
-        RESIN_ARCH: raspberrypi3
-        TINI_BIN: tini-armhf
-    image: derekmerck/movidius:arm32v7
 
   movidius-amd64:
     build:
       context: ./movidius
     image: derekmerck/movidius:amd64
 
+  movidius-arm32v7:
+    build:
+      context: ./movidius
+      args:
+        RESIN_ARCH: raspberrypi3
+    image: derekmerck/movidius:arm32v7

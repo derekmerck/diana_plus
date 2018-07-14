@@ -7,16 +7,6 @@ ARG RESIN_ARCH="intel-nuc"
 FROM resin/${RESIN_ARCH}-debian:stretch
 MAINTAINER Derek Merck <derek_merck@brown.edu>
 
-# Args for use inside the cross-compiler must be declared inside the cross compiler!
-ARG TINI_VERS="v0.18.0"
-ARG TINI_BIN="tini"
-#ARG TINI_BIN=tini-armhf
-ARG DIANA_PW="passw0rd!"
-
-ADD https://github.com/krallin/tini/releases/download/${TINI_VERS}/${TINI_BIN} /bin/tini
-RUN chmod +x /bin/tini
-ENTRYPOINT ["/bin/tini", "--"]
-
 RUN apt update  \
     && apt install -y --no-install-recommends \
       git \
@@ -55,11 +45,14 @@ RUN hg clone 'https://bitbucket.org/sjodogne/orthanc' '/opt/orthanc/source' \
     && mkdir /var/lib/orthanc \
     && mkdir /etc/orthanc
 
-COPY orthanc.json /etc/orthanc/orthanc.json
+COPY orthanc.json /etc/orthanc
 
-VOLUME /var/lib/orthanc/orthanc.json
 VOLUME /var/lib/orthanc/db/
+
 EXPOSE 8042 4242
 
 ENV TZ=America/New_York
+# Enable resin.io's systemd init system
+ENV INITSYSTEM on
+
 CMD /usr/local/sbin/Orthanc /etc/orthanc/orthanc.json

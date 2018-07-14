@@ -18,7 +18,7 @@
 - name: Start Worker
   docker_container:
     name:  "{{ container_name }}"
-    image: rcdiana/worker
+    image: derekmerck/diana-worker
     state: started
     # Worker will look for redis on localhost if not in env
     links:
