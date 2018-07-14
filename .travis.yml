@@ -13,13 +13,13 @@ addons:
       - docker-ce
 
 env:
-  matrix:
-    - ARCH_TAG=amd664
-    - SERVICE=dicom
-    - SERVICE=diana-worker
-    - SERVICE=learn
-    - SERVICE=learn-movidius
+  - ARCH_TAG=amd64
+  - SERVICE=orthanc
+  - SERVICE=diana-worker
+  - SERVICE=tf-keras
+  - SERVICE=movidius
 
+#  matrix:
 #    - ARCH_TAG="amd64"   SERVICE="dicom"
 ##    - ARCH_TAG="arm32v7" SERVICE="dicom"  # Never finishes in 50 mins -- build elsewhere
 #    - ARCH_TAG="amd64"   SERVICE="diana-worker"

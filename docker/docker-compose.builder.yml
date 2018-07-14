@@ -2,18 +2,18 @@ version: '3'
 
 services:
 
-  dicom-arm32v7:
+  orthanc-arm32v7:
     build:
       context: ./orthanc
       args:
         RESIN_ARCH: raspberrypi3
         TINI_BIN: tini-armhf
-    image: derekmerck/dicom:arm32v7
+    image: derekmerck/orthanc:arm32v7
 
-  dicom-amd64:
+  orthanc-amd64:
     build:
       context: ./orthanc
-    image: derekmerck/dicom:amd64
+    image: derekmerck/orthanc:amd64
 
   diana-worker-arm32v7:
     build:
@@ -28,7 +28,7 @@ services:
       context: ./diana-worker
     image: derekmerck/diana-worker:amd64
 
-  learn-arm32v7:
+  tf-keras-arm32v7:
     build:
       context: ./learn
       args:
@@ -36,14 +36,14 @@ services:
         TINI_BIN: tini-armhf
         TF_WHL_URL: http://ci.tensorflow.org/view/Nightly/job/nightly-pi-python3/lastSuccessfulBuild/artifact/output-artifacts/
         TF_WHL_FILE: tensorflow-1.9.0rc0-cp34-none-linux_armv7l.whl
-    image: derekmerck/learn:arm32v7
+    image: derekmerck/tf-keras:arm32v7
 
-  learn-amd64:
+  tf-keras-amd64:
     build:
       context: ./learn
-    image: derekmerck/learn:amd64
+    image: derekmerck/tf-keras:amd64
 
-  learn-movidius-arm32v7:
+  movidius-arm32v7:
     build:
       context: ./movidius
       args:
@@ -51,10 +51,8 @@ services:
         TINI_BIN: tini-armhf
     image: derekmerck/movidius:arm32v7
 
-  learn-movidius-amd64:
+  movidius-amd64:
     build:
       context: ./movidius
-      args:
-        ARCH_TAG: amd64
     image: derekmerck/movidius:amd64
 
