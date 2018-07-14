@@ -22,6 +22,7 @@ ENTRYPOINT ["/bin/tini", "--"]
 
 RUN apt update  \
     && apt install -y --no-install-recommends git \
+    && apt-get clean \
     && useradd -ms /bin/bash diana && echo "diana:${DIANA_PW}" | chpasswd \
     && git clone https://github.com/derekmerck/diana_plus /home/diana/source \
     && chown -R diana /home/diana/source \

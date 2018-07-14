@@ -37,7 +37,8 @@ RUN apt update  \
       libboost-all-dev \
       libwrap0-dev \
       libjsoncpp-dev \
-      libpugixml-dev
+      libpugixml-dev \
+    && apt-get clean
 
 RUN hg clone 'https://bitbucket.org/sjodogne/orthanc' '/opt/orthanc/source' \
     && mkdir '/opt/orthanc/build' \
@@ -54,7 +55,11 @@ RUN hg clone 'https://bitbucket.org/sjodogne/orthanc' '/opt/orthanc/source' \
     && mkdir /var/lib/orthanc \
     && mkdir /etc/orthanc
 
+COPY orthanc.json /etc/orthanc/orthanc.json
+
+VOLUME /var/lib/orthanc/orthanc.json
+VOLUME /var/lib/orthanc/db/
+EXPOSE 8042 4242
+
 ENV TZ=America/New_York
 CMD /usr/local/sbin/Orthanc /etc/orthanc/orthanc.json
-EXPOSE 8042 4242
-VOLUME /var/lib/orthanc/db/
