@@ -19,7 +19,7 @@ ADD https://github.com/krallin/tini/releases/download/${TINI_VERS}/${TINI_BIN} /
 RUN chmod +x /bin/tini
 ENTRYPOINT ["/bin/tini", "--"]
 
-RUN apt update
+RUN apt update \
     && apt install -y --no-install-recommends \
          git \
          build-essential \
