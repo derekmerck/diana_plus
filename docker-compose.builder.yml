@@ -36,16 +36,26 @@ services:
         TINI_BIN: tini-armhf
         TF_WHL_URL: http://ci.tensorflow.org/view/Nightly/job/nightly-pi-python3/lastSuccessfulBuild/artifact/output-artifacts/
         TF_WHL_FILE: tensorflow-1.9.0rc0-cp34-none-linux_armv7l.whl
-      image: derekmerck/learn:arm32v7
+    image: derekmerck/learn:arm32v7
 
   learn-amd64:
     build:
       context: ./learn
-      image: derekmerck/learn:amd64
+    image: derekmerck/learn:amd64
+
+  learn-movidius-arm32v7:
+    build:
+      context: ./learn
+      dockerfile: Dockerfile-movidius
+      args:
+        ARCH_TAG: arm32v7
+    image: derekmerck/learn-movidius:arm32v7
 
   learn-movidius-amd64:
     build:
       context: ./learn
       dockerfile: Dockerfile-movidius
-      image: derekmerck/learn-movidius:amd664
+      args:
+        ARCH_TAG: amd64
+    image: derekmerck/learn-movidius:amd64
 
