@@ -11,14 +11,10 @@ ARG RESIN_ARCH="intel-nuc"
 FROM resin/${RESIN_ARCH}-python:3
 MAINTAINER Derek Merck <derek_merck@brown.edu>
 
-ARG TINI_VERS="v0.18.0"
-ARG TINI_BIN="tini"
-#ARG TINI_BIN=tini-armhf
 ARG DIANA_PW="passw0rd!"
 
-ADD https://github.com/krallin/tini/releases/download/${TINI_VERS}/${TINI_BIN} /bin/tini
-RUN chmod +x /bin/tini
-ENTRYPOINT ["/bin/tini", "--"]
+# If aarch64, there is no security repo for jessie (but there is for stretch)
+# RUN sed -i 's$deb http://security.debian.org/debian-security jessie/updates main$$g' /etc/apt/sources.list
 
 RUN apt update  \
     && apt install -y --no-install-recommends git \
@@ -26,9 +22,12 @@ RUN apt update  \
     && useradd -ms /bin/bash diana && echo "diana:${DIANA_PW}" | chpasswd \
     && git clone https://github.com/derekmerck/diana_plus /home/diana/source \
     && chown -R diana /home/diana/source \
-    && pip install -e /home/diana/source/packages/diana
+    && pip3 install -e /home/diana/source/packages/diana
 
 ENV TZ=America/New_York
+# Enable resin.io's systemd init system
+ENV INITSYSTEM on
+
 USER diana
 WORKDIR /home/diana/source/apps
 CMD python3 diana-star/app.py worker

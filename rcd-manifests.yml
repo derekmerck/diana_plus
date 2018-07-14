@@ -1,0 +1,76 @@
+- image: "derekmerck/orthanc:latest"
+  manifests:
+    -
+      image: "derekmerck/orthanc:amd64"
+      platform:
+        architecture: amd64
+        os: linux
+
+    -
+      image: "derekmerck/orthanc:arm32v7"
+      platform:
+        architecture: arm
+        variant: v7
+        os: linux
+
+    -
+      image: "derekmerck/orthanc:arm64v8"
+      platform:
+        architecture: arm
+        variant: v8
+        os: linux
+
+
+- image: derekmerck/tf-keras:latest
+  manifests:
+    -
+      image: "derekmerck/tf-keras:amd64"
+      platform:
+        architecture: amd64
+        os: linux
+
+#    -
+#      image: "derekmerck/keras-tf:arm32v7"
+#      platform:
+#        architecture: arm
+#        variant: v7
+#        os: linux
+
+
+- image: derekmerck/diana-worker:latest
+  manifests:
+    -
+      image: "derekmerck/diana-worker:amd64"
+      platform:
+        architecture: amd64
+        os: linux
+
+    -
+      image: "derekmerck/diana-worker:arm32v7"
+      platform:
+        architecture: arm
+        variant: v7
+        os: linux
+
+    -
+      image: "derekmerck/diana-worker:arm64v8"
+      platform:
+        architecture: arm
+        variant: v8
+        os: linux
+
+
+- image: derekmerck/movidius:latest
+  manifests:
+    -
+      image: "derekmerck/movidius:amd64"
+      platform:
+        architecture: amd64
+        os: linux
+
+    -
+      image: "derekmerck/movidius:arm32v7"
+      platform:
+        architecture: arm
+        variant: v7
+        os: linux

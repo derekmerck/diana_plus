@@ -2,7 +2,7 @@ version: '3'
 
 services:
 
-  # Private redis broker service (has amd64 and armv7l versions)
+  # Private redis broker service (has amd64 and arm32v7 versions)
   broker:
     image: redis:latest
     command: redis-server --requirepass passw0rd!
@@ -26,9 +26,9 @@ services:
       SPLUNK_CMD_2: "http-event-collector enable -enable-ssl 0 -uri https://localhost:8089 -auth admin:passw0rd!"
       SPLUNK_CMD_3: "http-event-collector create diana_token 'diana index token' -index diana -uri https://localhost:8089 -auth admin:passw0rd!"
 
-  # Diana-Worker service (should be able to build both amd64 and arm7 versions
+  # Diana-Worker service (should be able to build both amd64 and arm32v7 versions
   worker:
-    image: derekmerck/diana-worker:amd64
+    image: derekmerck/diana-worker
     command: ["python3", "diana-star/app.py", "worker", "-n", "diana@%host", "-l", "INFO"]
     links:
       - broker
@@ -38,10 +38,11 @@ services:
       DIANA_BROKER: redis://:passw0rd!@broker:6379/1
       DIANA_RESULT: redis://:passw0rd!@broker:6379/2
 
-  # Private orthanc dicom proxy service (only amd64 version, need osimis...)
+  # Need osimis...
   dicom:
-    image: derekmerck/orthanc:amd64
+    image: derekmerck/orthanc
 #    image: jodogne/orthanc
+#    image: osimis/orthanc
     ports:
       - "4242:4242"
       - "8042:8042"  # Putting this on 80 makes it publishable on Resin

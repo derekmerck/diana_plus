@@ -1,28 +1,40 @@
 version: '3'
 
+# enable local mode
+# $ DOCKER_API_VERSION=1.22 DOCKER_HOST=tcp://resin.local:2375 docker-compose up
+# - https://github.com/resin-io-playground/resinos-compose
+
 services:
 
-#  diana-worker:
-#    image: derekmerck/diana-worker:amd64
+  broker:
+    image: redis
+    command: redis-server --requirepass passw0rd!
+    ports:
+      - "16379:16379"
+    environment:
+      TZ: America/New_York
 
   dicom:
-    image: derekmerck/orthanc:amd64
+    image: derekmerck/orthanc
     ports:
       - "14242:4242"
       - "18042:8042"
-    volumes:
-      - "/Users/derek/dev/diana_plus/docker/orthanc/orthanc.json:/etc/orthanc/orthanc.json:ro"
+
+  diana-worker:
+    image: derekmerck/diana-worker
+    links:
+      - broker
+      - dicom
+    environment:
+      DIANA_BROKER: redis://:passw0rd!@broker:6379/1
+      DIANA_RESULT: redis://:passw0rd!@broker:6379/2
 
   learn:
-    image: derekmerck/learn:amd64
-    ports:
-      - "18888:8888"
-    command:    ["tail", "-f", "/dev/null"]
+    image: derekmerck/tf-keras
 
   learn-movidius:
-    image: derekmerck/learn-movidius:amd64
+    image: derekmerck/movidius
     network_mode: host
     privileged: true
     volumes:
       - "/dev:/dev"
-    command:    ["tail", "-f", "/dev/null"]
