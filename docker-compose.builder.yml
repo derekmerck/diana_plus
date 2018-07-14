@@ -2,6 +2,10 @@ version: '3'
 
 services:
 
+  # ---------------------------
+  # orthanc
+  # ---------------------------
+
   orthanc-arm32v7:
     build:
       context: ./orthanc
@@ -15,6 +19,10 @@ services:
       context: ./orthanc
     image: derekmerck/orthanc:amd64
 
+  # ---------------------------
+  # diana-worker
+  # ---------------------------
+
   diana-worker-arm32v7:
     build:
       context: ./diana-worker
@@ -27,6 +35,10 @@ services:
     build:
       context: ./diana-worker
     image: derekmerck/diana-worker:amd64
+
+  # ---------------------------
+  # tf-keras
+  # ---------------------------
 
   tf-keras-arm32v7:
     build:
@@ -42,6 +54,10 @@ services:
     build:
       context: ./learn
     image: derekmerck/tf-keras:amd64
+
+  # ---------------------------
+  # movidius
+  # ---------------------------
 
   movidius-arm32v7:
     build:
