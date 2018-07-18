@@ -59,7 +59,7 @@ class MammographyReport(RadiologyReport):
 
         # "BI-RADS CATEGORY 4"
 
-        birad_pattern = re.compile(r'(?i)BI-RADS CATEGORY ([1-6]):?')
+        birad_pattern = re.compile(r'(?i)BI[- ]RADS (?:CATEGORY )?([0-6])')
         match = birad_pattern.findall(self.text)
 
         if len(match)>0:

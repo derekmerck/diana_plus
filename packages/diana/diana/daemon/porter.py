@@ -16,12 +16,13 @@ import logging
 from typing import Union
 import attr
 from diana.apis import MetaCache, Orthanc, DicomFile, Dixel
+from diana.utils import Pattern
 
 @attr.s
 class Porter(object):
     source = attr.ib( type=Orthanc )
     proxy_domain = attr.ib( type=str )
-    dest = attr.ib( type=DicomFile )
+    dest = attr.ib( type=Pattern )
     explode = attr.ib( default=None )
     # anonymize = attr.ib( default=True )
 
@@ -29,13 +30,9 @@ class Porter(object):
 
         for d in dixels:
             e = self.get_item(d)
-            self.move_item(e)
-            self.clean_up([d,e])
-
-    def clean_up(self, dixels):
-        # optionally clean up as you go
-        for d in dixels:
-            self.source.remove(d)
+            if e:
+                self.move_item(e)
+                self.source.remove(e)
 
     def get_item(self, d: Dixel) -> Dixel:
         raise NotImplementedError
@@ -88,6 +85,10 @@ class ProxyGetMixin(object):
     proxy_domain = attr.ib( type=str )
 
     def get_item(self, d: Dixel) -> Union[Dixel, None]:
+
+        if int(d.meta.get('batch')) < 2:
+            return
+
         # Check for unfindable
         if not d.meta.get("StudyInstanceUID"):
             logging.debug("Skipping {} - apparently unfindable".format(d.meta["ShamAccession"]))
@@ -98,17 +99,20 @@ class ProxyGetMixin(object):
             logging.debug("Skipping {} - already exists".format(d.meta["ShamAccession"]))
             return
 
-        # Shouldn't have a self-mutating function that can go to None...
-        my_accession = d.meta['ShamAccession']
-        d = self.source.find_item(d, self.proxy_domain, True)
+        if not self.source.check(d):
+            # Need to retrieve it
 
-        if not d:
-            # obviously not d b/c d is None by now...
-            logging.debug("Skipping {} - found but unretrievable".format(my_accession))
-            return
+            # Shouldn't have a self-mutating function that can go to None...
+            my_accession = d.meta['ShamAccession']
+            d = self.source.find_item(d, self.proxy_domain, True)
+
+            if not d:
+                # obviously not d b/c d is None by now...
+                logging.debug("Skipping {} - found but unretrievable".format(my_accession))
+                return
 
         try:
-            e = self.source.anonymize(d)
+            e = self.source.anonymize(d, remove=True)
         except:
             logging.debug("Skipping {} - can not anonymize (bad uid?)".format(d.meta["ShamAccession"]))
             return

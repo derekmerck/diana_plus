@@ -1,0 +1,28 @@
+ARG ARCH_TAG="amd64"
+#ARG ARCH_TAG="arm32v7"
+
+FROM derekmerck/tf-keras:$ARCH_TAG
+MAINTAINER Derek Merck <derek_merck@brown.edu>
+
+ARG DIANA_PW="passw0rd!"
+
+RUN apt-get update \
+    && apt-get install -yq --no-install-recommends \
+         openssh-server \
+    && apt-get clean
+
+# Set up the config for openSSH.  Stretch has PermitRootLogin commented by default
+# It is uncommented-"without-password" on tf-keras base (python3.4, probably Jessie)
+RUN mkdir /var/run/sshd \
+    && echo "root:${DIANA_PW}" | chpasswd \
+    && sed -i 's/PermitRootLogin without-password/PermitRootLogin yes/' /etc/ssh/sshd_config \
+    && sed -i 's/UsePAM yes/UsePAM no/' /etc/ssh/sshd_config
+
+EXPOSE 22
+
+ENV TZ=America/New_York
+# Enable resin.io's systemd init system
+ENV INITSYSTEM off
+
+#CMD service ssh start  # requires "privilidged"
+CMD /usr/sbin/sshd -D

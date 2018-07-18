@@ -1,0 +1,61 @@
+# diana worker service setup
+# Merck, summmer 2018
+#
+# diana builds are multiarch, so image name alone is typically sufficient for a manual
+# install on either amd64 (intel) or arm32v7 (raspberry pi)
+#
+# On Resin, may need to add "arm32v7" tags for raspberry pi b/c the uploader is
+# arm64 and will try to grab "arm64v8" by preference rather that the target arch.
+#
+# Resin also requires name "docker-compose.yml" in root; maybe able to use something like
+# $ git subtree push --prefix docker origin resin
+#
+# Can also push to local devices directly:
+# - https://github.com/resin-io-playground/resinos-compose
+#
+# 1. enable local mode through UI
+# 2. `$ DOCKER_API_VERSION=1.22 DOCKER_HOST=tcp://2d3a236.local:2375 docker-compose up -d`
+
+# resin docker-compose is 2.1 max
+version: '2.1'
+#version: '3'
+
+services:
+
+  broker:
+    image: redis
+    command: redis-server --requirepass passw0rd!
+    ports:
+      - "16379:16379"
+    environment:
+      TZ: America/New_York
+
+  dicom:
+    image: derekmerck/orthanc
+    ports:
+      - "14242:4242"
+      - "18042:8042"
+
+  diana-worker:
+    image: derekmerck/diana-worker
+    links:
+      - broker
+      - dicom
+    environment:
+      DIANA_BROKER: redis://:passw0rd!@broker:6379/1
+      DIANA_RESULT: redis://:passw0rd!@broker:6379/2
+
+  learn:
+    image: derekmerck/tf-keras-sshd
+    ports:
+      - "10022:22"
+
+  # The movidius requires host mode to register the usb device
+  # So if you want to include ssh, need to use 22 or set the port in sshd_config
+  learn-movidius:
+    image: derekmerck/movidius-sshd
+    network_mode: host
+    privileged: true
+    volumes:
+      - "/dev:/dev"
+

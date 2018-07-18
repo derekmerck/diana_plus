@@ -23,7 +23,7 @@ import logging
 
 import random
 from dateutil import parser as dateparser
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 import os
 from abc import abstractmethod
 
@@ -67,12 +67,15 @@ class GUIDMint(object):
 
             dob = ref_date-timedelta(days=age*365.25)
 
-        elif not isinstance(dob, datetime):
+        elif not isinstance(dob, datetime) and not isinstance(dob, date):
+
+            logging.error(type(dob))
+
             dob = dateparser.parse(dob)
 
         r = random.randint(-self.max_date_offset, self.max_date_offset)
         rd = timedelta(days=r)
 
-        return (dob+rd).date()
+        return (dob+rd)
 
 

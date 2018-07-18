@@ -4,20 +4,32 @@ import datetime
 from pprint import pformat
 from typing import Mapping, Callable, Union
 import attr
+from requests import ConnectionError
 from diana.utils import DicomLevel, Pattern, gateway, dicom_clean_tags, dicom_strfdate, dicom_strpdate, dicom_strpdtime
 from .dixel import Dixel
 
+def apply_tag_map(map, meta):
+    for k,v in map['Replace']:
+        meta[k] = v
+    return meta
+
+
 def simple_sham_map(meta):
-    return {
+    map = {
         'Replace': {
             'PatientName': meta['ShamName'],
             'PatientID': meta['ShamID'],
             'PatientBirthDate': dicom_strfdate( meta['ShamDoB'] ) if isinstance(meta["ShamDoB"], datetime.date) else meta["ShamDoB"],
             'AccessionNumber': meta['ShamAccession'].hexdigest() if hasattr( meta["ShamAccession"], "hexdigest") else meta["ShamAccession"],
+            'StudyInstanceUID': meta['ShamStudyUID'],
         },
         'Keep': ['PatientSex', 'StudyDescription', 'SeriesDescription', 'StudyDate'],
         'Force': True
     }
+    if meta.get('ShamSeriesUID'):
+        map['Replace']['SeriesInstanceUID'] = meta.get('ShamSeriesUID')
+
+    return map
 
 @attr.s(hash=False)
 class Orthanc(Pattern):
@@ -100,11 +112,19 @@ class Orthanc(Pattern):
     # Handlers
 
     def check(self, item: Dixel) -> bool:
+        # self.logger.debug(item.level)
         try:
-            res = self.get_item(item)
+            res = self.gateway.get_item(item.oid(), item.level)
+            # self.logger.debug("Found phi")
             return True
-        except:
-            return False
+        except ConnectionError:
+            try:
+                res = self.gateway.get_item(item.sham_oid(), item.level)
+                # self.logger.debug("Found anonymized")
+                return True
+            except ConnectionError:
+                # self.logger.debug("Could not find {} or {}".format(item.oid(), item.sham_oid()))
+                return False
 
     def anonymize(self, item: Dixel, replacement_map: Callable[[dict],dict]=simple_sham_map, remove: bool=False) -> Dixel:
         replacement_dict = replacement_map(item.meta)
@@ -124,6 +144,8 @@ class Orthanc(Pattern):
         """
         Have some information about a dixel, want to find the STUID, SERUID, INSTUID
         """
+
+        # self.logger.debug("Finding {}".format(item.oid()))
 
         def find_item_query(item):
             # Usually want to mask the dixel data to just AccessionNumber to isolate a study, or
@@ -238,13 +260,13 @@ class Orthanc(Pattern):
         for oid in oids:
             yield Dixel(meta={'oid': oid}, level=DicomLevel.STUDIES)
 
-
-@attr.s
-class OrthancPeer(Pattern):
-    # An Orthanc peer is a way to reverse peer.put(item) to source.send(item, peer) for templating
-    source = attr.ib( type=Orthanc, default=None )
-    peer_name = attr.ib( type=str, default=None )
-
-    def put(self, item):
-        self.source.send(item, peer=self.peer_name)
+#
+# @attr.s
+# class OrthancPeer(Pattern):
+#     # An Orthanc peer is a way to reverse peer.put(item) to source.send(item, peer) for templating
+#     source = attr.ib( type=Orthanc, default=None )
+#     peer_name = attr.ib( type=str, default=None )
+#
+#     def put(self, item):
+#         self.source.send(item, peer=self.peer_name)
 

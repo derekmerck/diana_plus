@@ -14,6 +14,7 @@ def docker_push(item):
 
 def docker_manifest_create(prime, aliases):
     cmd = ['docker', 'manifest', 'create', '--amend', prime, *aliases]
+    # cmd = ['docker', 'manifest', 'create', prime, *aliases]
     logging.debug(cmd)
     call(cmd)
 

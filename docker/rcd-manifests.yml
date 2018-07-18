@@ -1,3 +1,6 @@
+
+
+
 - image: "derekmerck/orthanc:latest"
   manifests:
     -
@@ -29,13 +32,28 @@
         architecture: amd64
         os: linux
 
-#    -
-#      image: "derekmerck/keras-tf:arm32v7"
-#      platform:
-#        architecture: arm
-#        variant: v7
-#        os: linux
+    -
+      image: "derekmerck/tf-keras:arm32v7"
+      platform:
+        architecture: arm
+        variant: v7
+        os: linux
 
+
+- image: derekmerck/tf-keras-sshd:latest
+  manifests:
+    -
+      image: "derekmerck/tf-keras-sshd:amd64"
+      platform:
+        architecture: amd64
+        os: linux
+
+    -
+      image: "derekmerck/tf-keras-sshd:arm32v7"
+      platform:
+        architecture: arm
+        variant: v7
+        os: linux
 
 - image: derekmerck/diana-worker:latest
   manifests:
@@ -70,6 +88,21 @@
 
     -
       image: "derekmerck/movidius:arm32v7"
+      platform:
+        architecture: arm
+        variant: v7
+        os: linux
+
+- image: derekmerck/movidius-sshd:latest
+  manifests:
+    -
+      image: "derekmerck/movidius-sshd:amd64"
+      platform:
+        architecture: amd64
+        os: linux
+
+    -
+      image: "derekmerck/movidius-sshd:arm32v7"
       platform:
         architecture: arm
         variant: v7

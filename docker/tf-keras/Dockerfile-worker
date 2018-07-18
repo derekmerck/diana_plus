@@ -5,10 +5,10 @@
 # - Change the queue by overriding CMD on start up
 #   e.g., command="python3 diana-star/app.py worker -B -Q my_queue"
 
-ARG RESIN_ARCH="intel-nuc"
-#ARG RESIN_ARCH="raspberrypi3"
+ARG ARCH_TAG="amd64"
+#ARG ARCH_TAG="arm32v7"
 
-FROM resin/${RESIN_ARCH}-python:3
+FROM derekmerck/tf-keras:$ARCH_TAG
 MAINTAINER Derek Merck <derek_merck@brown.edu>
 
 ARG DIANA_PW="passw0rd!"

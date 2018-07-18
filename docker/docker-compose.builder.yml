@@ -11,6 +11,22 @@ version: '3'
 
 services:
 
+# ---------------------------
+  # sshd
+  # ---------------------------
+
+  sshd-amd64:
+    build:
+      context: ./sshd
+    image: derekmerck/sshd:amd64
+
+  sshd-arm32v7:
+    build:
+      context: ./sshd
+      args:
+        RESIN_ARCH: raspberrypi3
+    image: derekmerck/sshd:arm32v7
+
   # ---------------------------
   # orthanc
   # ---------------------------
@@ -68,6 +84,12 @@ services:
       context: ./tf-keras
     image: derekmerck/tf-keras:amd64
 
+  diana-learn-amd64:
+    build:
+      context: ./tf-keras
+      dockerfile: Dockerfile-worker
+    image: derekmerck/diana-learn:amd64
+
   tf-keras-arm32v7:
     build:
       context: ./tf-keras
@@ -79,6 +101,22 @@ services:
 
   # No TF wheel for aarch64
 
+  tf-keras-sshd-amd64:
+    build:
+      context: ./tf-keras
+      dockerfile: Dockerfile-sshd
+    image: derekmerck/tf-keras-sshd:amd64
+    depends_on:
+      - tf-keras-amd64
+
+  tf-keras-sshd-arm32v7:
+    build:
+      context: ./tf-keras
+      dockerfile: Dockerfile-sshd
+      args:
+        ARCH_TAG: arm32v7
+    image: derekmerck/tf-keras-sshd:arm32v7
+      - tf-keras-arm32v7
 
   # ---------------------------
   # movidius
@@ -95,3 +133,21 @@ services:
       args:
         RESIN_ARCH: raspberrypi3
     image: derekmerck/movidius:arm32v7
+
+  movidius-sshd-amd64:
+    build:
+      context: ./movidius
+      dockerfile: Dockerfile-sshd
+    image: derekmerck/movidius-sshd:amd64
+    depends_on:
+      - movidius-amd64
+
+  movidius-sshd-arm32v7:
+    build:
+      context: ./movidius
+      dockerfile: Dockerfile-sshd
+      args:
+        ARCH_TAG: arm32v7
+    image: derekmerck/movidius-sshd:arm32v7
+    depends_on:
+      - movidius-arm32v7

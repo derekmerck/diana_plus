@@ -21,20 +21,16 @@ ARG TF_WHL_FILE=tensorflow-1.9.0rc0-cp34-cp34m-linux_x86_64.whl
 RUN apt update  \
     && apt install -y --no-install-recommends \
          libopenblas-base \
-         libhdf5-dev
+         libhdf5-dev \
+         libatlas-base-dev \
+         libatlas-dev
 
 RUN pip3 --no-cache-dir install \
-         pyyaml
-
-RUN pip3 --no-cache-dir install \
-         numpy
-
-RUN pip3 --no-cache-dir install \
-         h5py
-
-RUN pip3 --no-cache-dir install \
-#         pydot \
-         scipy
+         pyyaml \
+         numpy \
+         h5py \
+         scipy \
+         pydot
 
 RUN curl -O ${TF_WHL_URL}${TF_WHL_FILE} \
     && pip3 install ${TF_WHL_FILE}

@@ -4,7 +4,7 @@ import logging, json
 import attr
 from typing import Mapping
 from .requester import Requester
-from ..dicom import DicomLevel
+from ..dicom_level import DicomLevel
 from pprint import pprint
 
 @attr.s
@@ -41,7 +41,7 @@ class Orthanc(Requester):
 
     # item handling by oid and level
 
-    def get_item(self, oid: str, level: DicomLevel, view: str):
+    def get_item(self, oid: str, level: DicomLevel, view: str="meta"):
         # View in [meta, tags, file*, image*, archive**]
         # * only instance level
         # * only series or study level
@@ -135,7 +135,7 @@ class Orthanc(Requester):
                 headers = {'content-type': 'application/text'}
                 rr = self.post(resource, data=retrieve_dest, headers=headers)
                 # self.logger.debug(retrieve_dest)
-                # self.logger.debug(rr)
+                # self.logger.debug("Retrieved {}".format(rr))
 
         # Returns an array of answers
         return ret

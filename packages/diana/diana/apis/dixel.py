@@ -1,9 +1,9 @@
-import logging
+import logging, hashlib, datetime
 import attr
-import datetime
 from dateutil import parser as dtparser
 from .report import RadiologyReport
-from ..utils import Pattern, DicomLevel, orthanc_id
+from diana.utils import Pattern, DicomLevel, orthanc_id, dicom_strfdate, dicom_strfname, DicomUIDMint
+from guidmint import PseudoMint
 
 
 @attr.s(cmp=False, hash=None)
@@ -31,8 +31,10 @@ class Dixel(Pattern):
         if self.level != other.level:
             raise ValueError("Wrong dixel levels to update!")
 
-        updatable = ["AccessionNumber", "StudyInstanceUID", "SeriesInstanceUID", "SOPInstanceUID", "PatientID", \
-                     "PatientName", "PatientBirthDate", "SeriesNumber", "StudyDateTime"]
+        updatable = ["PatientID", "PatientName", "PatientBirthDate",
+                     "StudyInstanceUID", "AccessionNumber", "StudyDateTime",
+                     "SeriesInstanceUID", "SeriesNumber",
+                     "SOPInstanceUID", ]
 
         for k in updatable:
             v = other.meta.get(k)
@@ -72,6 +74,15 @@ class Dixel(Pattern):
         else:
             raise ValueError("No such DICOM level: {}".format(level))
 
+    def sham_oid(self):
+
+        if self.level == DicomLevel.STUDIES:
+            return orthanc_id(self.meta['ShamID'], self.meta['ShamStudyUID'])
+        elif self.level == DicomLevel.SERIES:
+            return orthanc_id(self.meta['ShamID'], self.meta['ShamStudyUID'], self.meta['ShamSeriesUID'])
+
+        raise TypeError("Cannot create sham oid from meta")
+
     def get_pixels(self):
         if self.meta['PhotometricInterpretation'] == "RGB":
             pixels = self.pixels.reshape([self.pixels.shape[1], self.pixels.shape[2], 3])
@@ -79,3 +90,32 @@ class Dixel(Pattern):
             pixels = self.pixels
 
         return pixels
+
+    def set_shams(self, id_mint: PseudoMint=None, dicom_mint: DicomUIDMint=None):
+
+        id_mint = id_mint or PseudoMint()
+        dicom_mint = dicom_mint or DicomUIDMint("Diana")
+
+        sham_identity = id_mint.pseudo_identity(self.meta['PatientName'],
+                                                self.meta['PatientBirthDate'],
+                                                self.meta['PatientSex'])
+
+        self.meta['ShamAccession'] = hashlib.md5(self.meta['AccessionNumber'].encode("UTF8"))
+        self.meta['ShamID']        = sham_identity[0]
+        self.meta['ShamName']      = dicom_strfname( sham_identity[1] )
+        self.meta['ShamDoB']       = dicom_strfdate( sham_identity[2] )
+        self.meta['ShamStudyUID']  = dicom_mint.uid(self.meta['PatientID'],
+                                                    self.meta['AccessionNumber'])
+        # self.meta['ShamStudyOID'] = orthanc_id(self.meta['ShamID'],
+        #                                        self.meta['ShamStudyUID'])
+
+        if self.level == DicomLevel.SERIES:
+            self.meta['ShamSeriesUID'] = dicom_mint.uid(self.meta['PatientID'],
+                                                        self.meta['AccessionNumber'],
+                                                        self.meta['SeriesDescription'])
+
+            # self.meta['ShamSeriesOID'] = orthanc_id(self.meta['ShamID'],
+            #                                         self.meta['ShamStudyUID'],
+            #                                         self.meta['ShamSeriesUID'])
+
+        return self

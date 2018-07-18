@@ -1,4 +1,4 @@
-from .orthanc import Orthanc, OrthancPeer
+from .orthanc import Orthanc
 from .redis import Redis
 from .meta_cache import MetaCache
 from .file_handler import DicomFile, ReportFile, ImageFile
