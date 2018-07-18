@@ -1,5 +1,5 @@
 import datetime
-from enum import Enum, auto
+from enum import Enum
 import attr
 from diana.utils.orthanc_id import orthanc_hash
 import hashlib
@@ -11,9 +11,9 @@ def hash_str(s, digits=2):
     return str( hash2int(hashlib.sha1(str(s).encode("UTF8")), digits) )
 
 class SuffixStyle(Enum):
-    HIERARCHICAL = auto()
-    OID32 = auto()
-    RANDOM = auto()
+    HIERARCHICAL = 1
+    OID32 = 2
+    RANDOM = 3
 
 @attr.s
 class DicomUIDMint(object):
