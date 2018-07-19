@@ -17,14 +17,23 @@ class FileHandler(object):
         return logging.getLogger(__name__)
 
     def fp(self, fn: str, path: str=None, explode: Sequence=None):
-        partial = self.location
+        partial = None
+        if self.location:
+            partial = self.location
         if path:
+            # logging.debug(self.location)
+            # logging.debug(partial)
+            # logging.debug(path)
             partial = os.path.join(partial, path)
         if explode:
             epath = self.explode_path(fn, explode[0], explode[1])
             partial = os.path.join(partial, epath)
-        fp = os.path.join(partial, fn)
-        return fp
+
+        if partial:
+            fp = os.path.join(partial, fn)
+            return fp
+
+        return fn
 
     def explode_path(self, fn: str, stride: int, depth: int):
         expath = []

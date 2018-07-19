@@ -26,6 +26,22 @@ Packet's ARMv8 server instances can be used to compile `arm64v8` containers.
 No good solution for `arm32v7` yet other than tedious local builds.
 
 
+## arm64v8 builds on Packet
+
+```
+$ apt update
+$ apt upgrade
+$ curl -fsSL get.docker.com -o get-docker.sh
+$ sh get-docker.sh 
+$ docker run hello-world
+$ apt install git python-pip
+$ pip install docker-compose
+$ git clone http://github.com/derekmerck/diana_plus
+$ cd diana_plus/docker
+$ docker-compose -f docker-compose.build.yml build orthanc-arm64v8 , etc...
+```
+
+
 ## Multiarch
 
 After building new images, call `manifest-it.py` to push updated images and build the Docker

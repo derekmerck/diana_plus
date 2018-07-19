@@ -12,20 +12,21 @@ class Dixel(Pattern):
     meta  = attr.ib(factory=dict)
     pixels = attr.ib(default=None)
     file  = attr.ib(default=None)
-    report = attr.ib(default=None, type=RadiologyReport)
+    report = attr.ib(default=None, type=RadiologyReport, converter=RadiologyReport)
 
     # Can't pickle a logger without dill, so Dixels don't need one
     logger = attr.ib(init=False, default=None)
 
-    # Not always the best idea, can't put them in a set if the AN is identical
     def __hash__(self):
 
-        try:
-            return hash(self.AccessionNumber)
-            # return hash(self.oid())
-        except:
-            # If not enough info for oid, use the uid from Pattern
-            return Pattern.__hash__(self)
+        # Not always the best idea, can't series or instances into a set if the AN is identical
+        if self.level == DicomLevel.STUDIES:
+            try:
+                return hash(self.AccessionNumber)
+            except:
+                pass
+
+        return Pattern.__hash__(self)
 
     def update(self, other):
         if self.level != other.level:

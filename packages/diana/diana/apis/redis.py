@@ -22,12 +22,14 @@ class Redis(Pattern):
         return RedisGateway(host=self.host, port=self.port, db=self.db, password=self.password)
 
     @classmethod
-    def item2str(cls, item: Union[Dixel, UUID, str]) -> str:
-        if type(item) == Dixel:
+    def item2str(cls, item: Union[Dixel, UUID, str], key: str=None) -> str:
+        if type(item) == Dixel and key:
+            id = str( item.meta[key] )
+        elif type(item) == Dixel:
             id = str( item.uid )
         elif type(item) == UUID:
             id = str(item)
-        elif type(item) == str:
+        elif type(item) == str or type(item) == bytes:
             id = item
         else:
             raise ValueError("Can not convert type {} to key str!".format(type(item)))
@@ -36,6 +38,7 @@ class Redis(Pattern):
     def get(self, item: Union[Dixel, UUID, str], **kwargs):
 
         id = Redis.item2str( item )
+        # self.logger.debug(self.gateway.get(id))
         item = loads( self.gateway.get(id) )
         return item
 
@@ -44,28 +47,30 @@ class Redis(Pattern):
         id = Redis.item2str(item)
         self.gateway.delete(id)
 
-    def put(self, item: Dixel) -> Dixel:
+    def put(self, item: Dixel, key=None) -> Dixel:
 
-        id = Redis.item2str(item)
+        id = Redis.item2str(item, key=key)
         self.gateway.set( id, dumps(item) )
         return item
 
-    def sput(self, sid: str, items: Iterable):
+    def sput(self, sid: str, items: Iterable, key=None):
+        if not hasattr(items, "__iter__"):
+            items = [items]
         for item in items:
-            self.sadd(sid, item)
+            self.gateway.sadd(sid, Redis.item2str(item, key=key))
+            self.put(item, key=key)
 
     def sget(self, sid: str):
         result = set()
         for iid in self.gateway.smembers(sid):
+            self.logger.debug(iid)
             item = self.get(iid)
+            # self.logger.debug( hash(item) )
             result.add(item)
         return result
-
-    def sadd(self, sid, item):
-        self.gateway.sput(sid, Redis.item2str(item))
-        self.put(item)
 
     def sremove(self, sid, iid):
         self.gateway.srem(sid, iid)
 
-
+    def clear(self):
+        self.gateway.flushdb()

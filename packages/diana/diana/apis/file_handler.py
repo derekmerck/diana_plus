@@ -99,6 +99,7 @@ class DicomFile(Pattern):
         # Get needs to accept oid's or items with oid's
         if type(item) == Dixel:
             fn = item.meta['FileName']
+            path = item.meta['FilePath']
         else:
             fn = item
 
@@ -114,7 +115,8 @@ class DicomFile(Pattern):
                  'MediaStorage': str(dcm.file_meta.MediaStorageSOPClassUID),
                  'PhotometricInterpretation': dcm[0x0028, 0x0004].value,  #MONOCHROME, RGB etc.
                  'FileName': fn,
-                 'FilePath': fp}
+                 'FilePath': path,
+                 'FullPath': fp }
 
         _pixels = None
         if view=="pixels":

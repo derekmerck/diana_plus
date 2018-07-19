@@ -9,7 +9,9 @@ import attr
 from diana.utils import Pattern, DicomLevel, dicom_strpdate
 from diana.utils.smart_encode import stringify
 from .dixel import Dixel
+import os
 
+from pprint import pprint, pformat
 
 # Doesn't really need to be patternable
 @attr.s
@@ -20,7 +22,7 @@ class MetaCache(Pattern):
 
     montage_keymap = {
         "Accession Number": "AccessionNumber",
-        "Patient MRN": "PatientID",
+        "Patient MRN":  "PatientID",
         "Patient First Name": 'PatientFirstName',
         "Patient Last Name": 'PatientLastName',
 
@@ -39,14 +41,22 @@ class MetaCache(Pattern):
 
     def did(self, meta):
         level = meta["_level"]
-        if level < DicomLevel.SERIES:
-            return meta[self.key_field]
 
-        elif level == DicomLevel.SERIES:
-            return meta[self.key_field], meta['SeriesDescription']
+        try:
+            if level == DicomLevel.STUDIES:
+                return meta[self.key_field]
 
-        elif level == DicomLevel.INSTANCES:
-            return meta[self.key_field], meta['SeriesDescription'], meta['InstanceNumber']
+            elif level == DicomLevel.SERIES:
+                return meta[self.key_field], meta['SeriesDescription']
+
+            elif level == DicomLevel.INSTANCES:
+                return meta[self.key_field], meta['SeriesDescription'], meta['InstanceNumber']
+
+        except KeyError:
+            self.logger.error("Could not find key {}".format( self.key_field) )
+            self.logger.error("keys: {}".format(meta.keys()))
+            return None
+
 
     def get(self, item: Union[Dixel, str], **kwargs):
 
@@ -92,7 +102,7 @@ class MetaCache(Pattern):
         self.cache[self.did(meta)] = meta
 
     def load(self, fp: str=None, level=DicomLevel.STUDIES, keymap: Mapping=None):
-        self.logger.debug("loading")
+        self.logger.debug("loading {}".format(os.path.split(fp)[-1]))
         fp = fp or self.location
 
         def remap_keys(item):
@@ -104,7 +114,10 @@ class MetaCache(Pattern):
                     ret[v] = vv
             return ret
 
-        with open(fp) as f:
+        # This encoding seems to fix a lot of Montage read errors
+        # - https://stackoverflow.com/questions/33819557/unicodedecodeerror-utf-8-codec-while-reading-a-csv-file
+        with open(fp, encoding="cp1252") as f:
+        # with open(fp, encoding="UTF8") as f:
             reader = DictReader(f)
 
             for item in reader:
@@ -129,15 +142,19 @@ class MetaCache(Pattern):
                             except:
                                 raise ValueError("No date can be parsed from {}".format(v))
 
-                # self.logger.debug(item)
+                # self.logger.debug( pformat( dict(item) ))
 
                 self.cache[self.did(item)] = dict(item)
 
-    def dump(self, fp=None, fieldnames=None):
+
+    def dump(self, fp=None, fieldnames=None, extra_fieldnames=None):
         self.logger.debug("dumping")
         fp = fp or self.location
         fieldnames = fieldnames or \
                      list( self.cache.values().__iter__().__next__().keys() )
+        for field in extra_fieldnames:
+            if field not in fieldnames:
+                fieldnames.append(field)
         if "_report" not in fieldnames:
             fieldnames.append("_report")
         if "_level" not in fieldnames:
@@ -149,12 +166,22 @@ class MetaCache(Pattern):
             writer = DictWriter(f, fieldnames)
             writer.writeheader()
             for k, v in self.cache.items():
+                w = {}
                 for kk, vv in v.items():
-                    out = stringify(vv)
-                    if out:
-                        v[kk] = out
+                    self.logger.debug(fieldnames)
+                    self.logger.debug(kk)
+                    self.logger.debug(vv)
+                    if kk in fieldnames:
+                        self.logger.debug("valid field")
+                        out = stringify(vv)
+                        if out:
+                            self.logger.debug("Using out {}".format(out))
+                            w[kk] = out
+                        else:
+                            self.logger.debug("Using native {}".format(vv))
+                            w[kk] = vv
 
-                writer.writerow(v)
+                writer.writerow(w)
 
     def __iter__(self):
         # self.logger.debug("Setting iterator = cache.keys()")

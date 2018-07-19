@@ -5,12 +5,18 @@ import attr
 class RadiologyReport(object):
     text = attr.ib()
 
+    def __str__(self):
+        return self.text
+
     # Based on Lifespan/RIMI report template
     PHI_RE = re.compile(r'^.* MD.*$|^.*MRN.*$|^.*DOS.*$|^(?:.* )Dr.*$|^.* NP.*$|^.* RN.*$|^.* RA.*$|^.* PA.*$|^Report created.*$|^.*Signing Doctor.*$|^.*has reviewed.*$',re.M)
     FINDINGS_RE = re.compile(r'^.*discussed.*$|^.*nurse practitioner.*$|^.*physician assistant.*$|^.*virtual rad.*$', re.M | re.I)
     RADCAT_RE = re.compile(r'^.*RADCAT.*$', re.M)
     # https://stackoverflow.com/questions/16699007/regular-expression-to-match-standard-10-digit-phone-number
     PHONE_RE = re.compile(r'\s*(?:\+?(\d{1,3}))?[-. (]*(\d{3})[-. )]*(\d{3})[-. ]*(\d{4})(?: *x(\d+))?\s*', re.M)
+
+    def anonymize(self):
+        self.text = self.anonymized()
 
     def anonymized(self):
         # Explicitly decode it
@@ -28,6 +34,8 @@ class RadiologyReport(object):
         # except UnicodeDecodeError:
         #     logging.error(anon_text)
         #     raise Exception('Cannot encode this report')
+
+        anon_text = anon_text.rstrip() + "\n"
 
         return anon_text
 

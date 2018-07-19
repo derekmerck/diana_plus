@@ -86,9 +86,6 @@ class ProxyGetMixin(object):
 
     def get_item(self, d: Dixel) -> Union[Dixel, None]:
 
-        if int(d.meta.get('batch')) < 2:
-            return
-
         # Check for unfindable
         if not d.meta.get("StudyInstanceUID"):
             logging.debug("Skipping {} - apparently unfindable".format(d.meta["ShamAccession"]))
